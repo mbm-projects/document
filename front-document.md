@@ -774,6 +774,7 @@ export type SignupFormValues = z.infer<typeof signupFormSchema>;
 | `API_BASE_URL` | サーバーサイドから呼び出すAPIサーバーのベースURL | サーバーのみ | `http://api-server:8080` |
 | `NEXT_PUBLIC_API_BASE_URL` | クライアントサイドから呼び出すAPIサーバーのベースURL | **ブラウザに露出** | `https://api.example.com` |
 | `NEXT_PUBLIC_APP_ENV` | 動作環境の識別（表示切替・ログ制御用） | **ブラウザに露出** | `local` / `staging` / `production` |
+
 - 認証方式（Cookie / Authorization ヘッダ）が確定した時点で、必要な変数を本表に追記する。
 - `NODE_ENV` は Next.js が自動設定するため `.env` には記述しない。
 
