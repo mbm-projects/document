@@ -1,39 +1,33 @@
-# ジョビフェスバックエンド開発規約
 ## 命名規則
 
-| 対象要素 | 推奨される表記法 (ケース) | 具体的な命名例 |
+| 対象要素 | 表記法 | 命名例 |
 | --- | --- | --- |
 | **クラス (Class)** | アッパーキャメルケース | `UserService`, `OrderController`, `DatabaseManager` |
 | **インターフェース (Interface)** | アッパーキャメルケース | `UserMapper`, `Runnable`, `Serializable` |
 | **メソッド (Method)** | ローワーキャメルケース | `getUserById()`, `saveOrder()`, `isEmpty()` |
-| **変数 / フィールド (Variable)** | ローワーキャメルケース | `userId`, `totalPrice`, `createdAt` |
+| **変数 / フィールド (Variable / Field)** | ローワーキャメルケース | `userId`, `totalPrice`, `createdAt` |
 | **定数 (Constant)** | 大文字スネークケース | `MAX_RETRY_COUNT`, `DEFAULT_PAGE_SIZE` |
 | **パッケージ (Package)** | すべて小文字 | `com.example.project.service` |
 | **型パラメータ (Generics)** | 大文字1文字 | `T`, `E`, `K`, `V` |
 
 ## コーディング規約
 
-| 分類 | ルール設定内容 | 具体例・推奨値 |
+| 分類 | ルール | 具体例・補足 |
 | --- | --- | --- |
-| **インデント (Indent)** | スペース4個（タブ文字は禁止） | 空白4つで統一 |
-| **改行コード (Line End)** | `LF` に統一 | Windows環境でも `CRLF` ではなく `LF` |
-| **1行の文字数制限** | 最大120文字（超える場合は改行） | 120文字を超えたらカンマや演算子の後で改行 |
-| **波括弧の位置 (Braces)** | 行の末尾に開始括弧 `{` を置く（K&Rスタイル）。クラス・メソッド宣言、if/for/whileなど全ての制御構文に適用する | `if (condition) {` 
-    `// 処理` 
-`}` |
-| **余分な空白 (Whitespace)** | キーワードの前後、演算子の前後にはスペースを1つ空ける | `if (a == b)` （`if(a==b)` はNG） |
-| **ファイルの末尾** | ファイルの最後には必ず1つの空行を入れる | `}` の後に改行を1つ入れる |
-| **インポート (Import)** | ワイルドカード（`*`）によるインポートは禁止 | `import java.util.*;` はNG、個別指定にする |
-| **アノテーション記述** | クラスやメソッドに対するアノテーションは改行して書く | `@Override
-public void run() { ... }` |
-| **例外処理 (Exception)** | キャッチした例外を何もせずに無視（握り潰し）するのを禁止 | 業務例外はcatchしたら独自例外（`BusinessException`継承クラス）に変換してthrowするか、ログを出す。 |
-| **Lombokの利用方針** | 必要最低限のアノテーションを利用する | `@Data` を使用していいがコンストラクタなどが必要ない場合は`@Getter` などのみ定義する |
-| **アクセス修飾子** | フィールドは基本`private`。外部公開が必要な場合のみ`getter`経由でアクセスする | `private String userName;` |
-| **コメント** | メソッド・クラスの上に必ずコメントを残し、処理の中にもコメントを残す | `/** ユーザー情報を取得する */` 
-`// コメント` |
-| **未使用コードの禁止** | 未使用のimport・変数・デッドコードを残さない | IDEの警告（黄色下線）を都度解消する |
-| **1メソッドの行数目安** | 1メソッドは概ね50行以内を目安とする。超える場合はprivateメソッドに分割する。
-意味がある場合は超えてもいい | 長い処理は意味のある単位で関数化する。 |
+| **インデント** | スペース4つで統一する（タブ文字は禁止） | — |
+| **改行コード** | `LF` に統一する | Windows環境でも `CRLF` は使用しない |
+| **1行の文字数** | 最大120文字とする | 超える場合はカンマや演算子の後で改行する |
+| **波括弧の位置** | 開始括弧 `{` は行末に置く（K&Rスタイル）。クラス・メソッド宣言、`if` / `for` / `while` などすべての構文に適用する | `if (condition) {`<br>`    // 処理`<br>`}` |
+| **空白** | キーワードの後、および演算子の前後に半角スペースを1つ入れる | OK: `if (a == b)`<br>NG: `if(a==b)` |
+| **ファイル末尾** | ファイルの最後は必ず改行で終える | 最後の `}` の後に改行を1つ入れる |
+| **インポート** | ワイルドカード（`*`）によるインポートは禁止し、クラスを個別に指定する | NG: `import java.util.*;` |
+| **アノテーション** | クラス・メソッドに付与するアノテーションは、宣言とは別の行に記述する | `@Override`<br>`public void run() { ... }` |
+| **例外処理** | catchした例外を何もせずに握り潰すことを禁止する | 業務例外は独自例外（`BusinessException` の継承クラス）に変換してthrowするか、ログを出力する |
+| **Lombok** | 必要最低限のアノテーションのみ使用する | `@Data` は使用可。ただしsetterやコンストラクタが不要な場合は `@Getter` など必要なものだけを付与する |
+| **アクセス修飾子** | フィールドは原則 `private` とし、外部から参照する場合はgetter経由とする | `private String userName;` |
+| **コメント** | クラス・メソッドには必ずJavadocコメントを記述し、処理内にも適宜コメントを残す | `/** ユーザー情報を取得する */`<br>`// 入力値をチェックする` |
+| **未使用コード** | 未使用のimport・変数・デッドコードを残さない | IDEの警告（黄色の下線）はその都度解消する |
+| **メソッドの行数** | 1メソッドは50行以内を目安とし、超える場合は意味のある単位でprivateメソッドに分割する | 分割するとかえって可読性が下がるなど、合理的な理由がある場合は超えてもよい |
 
 ## 使用ライブラリ
 
@@ -501,12 +495,41 @@ DBの区分値（ステータスコードなど）と日本語ラベルを紐付
 
 カスタム例外クラスと、アプリケーション全体で発生した例外をキャッチして共通の型でエラーレスポンスを返すハンドラー(`@RestControllerAdvice`)から成る。
 
+- **パッケージ構成**
+    - `exception` 直下: `BusinessException`・`ErrorResponse`・`GlobalExceptionHandler`
+    - `exception/validation`: `ValidationException`・`ValidationErrorResponse` と、その継承クラス
+    - `exception/{役割名}`: 役割ごとの業務例外(例：`user/`,`auth/`)
 - **制約**
     - すべての業務例外は `BusinessException` を継承し、コンストラクタで `HttpStatus`・`errorCode`・`message` をセットする。
-        - `GlobalExceptionHandler` は業務例外の場合は `BusinessException` を1回だけ `@ExceptionHandler` し、例外が保持する値を取り出して共通の `ErrorResponse` を組み立て、レスポンスとして返す。その他の例外は一つずつ記述を行い、`ErrorResponse` を返す。
+        - `GlobalExceptionHandler` は業務例外の場合は `BusinessException` を1回だけ `@ExceptionHandler` し、例外が保持する値を取り出して共通の `ErrorResponse` を組み立て、レスポンスとして返す。ただし `BusinessException` を継承した `ValidationException` は項目別のエラーを持つため、別途 `@ExceptionHandler` で処理し `ValidationErrorResponse` を返す。その他の例外は一つずつ記述を行い、`ErrorResponse` を返す。
     - 各エクセプションは役割ごとにサブパッケージ化を行う。例：`user/`,`auth/`
     - セキュリティ関係のhandlerは業務例外ではないため`security` パッケージ内に配置する
     - バリデーションチェックのエラーも対応する
+    - ログ出力は `GlobalExceptionHandler` で一元的に行う(ログルールは下記参照)
+    - errorCodeは大文字スネークケース(例：`USER_NOT_FOUND`)で統一する
+- **ログ出力ルール**
+    - **出力場所**
+        - 例外のログは `GlobalExceptionHandler` の各 `@ExceptionHandler` 内で必ず出力する(ログを出さずにレスポンスだけ返してはならない)
+        - 二重出力を防ぐため、例外をthrowする側(controller・service・repositoryなど)では同じ例外のログを出力しない
+        - `security/handler` 配下のハンドラー(認証・認可エラー)も本ルールに従いログを出力する
+    - **ログレベルとスタックトレース**
+        - 業務例外(`BusinessException`)
+            - `WARN`
+            - `errorCode`・`message`・HTTPステータスを出力する(スタックトレースは出力しない)
+        - バリデーションエラー・リクエスト形式不正・存在しないURLへのアクセスなど、リクエスト起因のエラー
+            - `WARN`
+            - エラー内容が分かるメッセージを出力する(スタックトレースは出力しない)
+        - 想定外の例外(`Exception`)
+            - `ERROR`
+            - スタックトレースを含めて出力する(例外オブジェクトをログの最後の引数に渡す)
+    - **実装方法**
+        - ロガーはLombokの `@Slf4j` を利用する
+        - ログメッセージは日本語で記述し、値の埋め込みはプレースホルダ(`{}`)を利用する(文字列連結は禁止)
+    - **出力してはいけない情報**
+        - パスワード・トークン(JWT等)・Cookieの値・個人情報(メールアドレス、氏名など)はログに出力しない
+        - バリデーションエラーの入力値(rejected value)はログに出力しない(項目名とメッセージのみ出力する)
+    - **レスポンスとの関係**
+        - 想定外の例外(500)はスタックトレースや例外メッセージなどの内部情報をレスポンスに含めず、固定メッセージを返す(詳細はログでのみ確認する)
 - **各Exception**クラス
     - **フィールド**
         - なし(親クラスのフィールドを利用)
@@ -518,6 +541,7 @@ DBの区分値（ステータスコードなど）と日本語ラベルを紐付
         - `BusinessException` を継承する
         - コンストラクタはsuper()を呼びだす
         - サブパッケージ内に配置する
+        - `message` にはログに出力してもよい情報のみ含める(パスワード等の機密情報を含めない)
 - **ErrorResponseクラス**
     - **フィールド**
         - errorCode
@@ -535,14 +559,17 @@ DBの区分値（ステータスコードなど）と日本語ラベルを紐付
     - **制約**
         - `exception`直下に配置する
         - Lombokのgetterのみを利用する
+        - 継承されることを想定し、フィールドは `private final`、コンストラクタは `public` とする
 - **BusinessException**
     - **フィールド**
         - status
             - org.springframework.http.HttpStatus
             - final
+            - private
         - errorCode
             - String
             - final
+            - private
     - **引数**
         - コンストラクタで以下のものを受け取る
             - status
@@ -557,14 +584,80 @@ DBの区分値（ステータスコードなど）と日本語ラベルを紐付
         - Lombokを利用する(Getterのみ)
         - `RuntimeException` を継承する
         - コンストラクタのアクセス修飾子は`protected`
+- **バリデーション(`exception/validation`)**
+    - バリデーションエラーは項目別のエラーを返す特殊なエラーとして、`exception/validation` パッケージに独立して配置する
+    - **ValidationErrorResponseクラス**
+        - **フィールド**
+            - errors
+                - Map<String, String>
+                - final
+                - private
+                - key は項目名、value はエラーメッセージ
+        - **引数**
+            - errorCode・message・errors を受け取るコンストラクタのみ
+        - **戻り値**
+            - フィールドに関するもの(getterのみ)
+        - **制約**
+            - `ErrorResponse` を継承する
+            - Lombokのgetterのみを利用する
+            - コンストラクタで `super()` を呼び出す
+    - **ValidationExceptionクラス(継承用)**
+        - **フィールド**
+            - errors
+                - Map<String, String>
+                - final
+                - private
+                - key は項目名、value はエラーメッセージ
+        - **引数**
+            - コンストラクタで以下のものを受け取る
+                - status(HttpStatus)
+                - errorCode(String)
+                - message(String)
+                - errors(Map<String, String>)
+        - **戻り値**
+            - なし
+        - **制約**
+            - `BusinessException` を継承する
+            - Lombokのgetterのみを利用する
+            - コンストラクタのアクセス修飾子は `protected`(継承して利用する)
+            - 項目単位でエラーを返したい業務エラー(重複登録、項目間の整合性エラーなど)は、これを継承した例外をthrowする
+            - 継承先は `exception/validation` または役割ごとのサブパッケージに配置する
+            - `errors` の key はリクエストのキー名(JSONのキー名)とする
+    - **ハンドリング**
+        - ハンドラーは `GlobalExceptionHandler` に記述する(バリデーション専用のハンドラークラスは作らない)
+        - `MethodArgumentNotValidException`(`@Valid`)と `HandlerMethodValidationException`(`@PathVariable`・`@RequestParam`)をそれぞれ `@ExceptionHandler` で処理する
+        - `ValidationException` を1回だけ `@ExceptionHandler` で処理する
+        - 戻り値は `ResponseEntity<ValidationErrorResponse>` とする
+    - **ステータス・エラーコード**
+        - `@Valid` 等のバリデーションアノテーションによるエラーは、すべて `400 BAD_REQUEST`・errorCode `VALIDATION_ERROR` で返す(`422` は使用しない)
+        - `message` は固定文言(`入力内容に誤りがあります`)とする
+        - `ValidationException` 由来のエラーは、例外が保持する `status`・`errorCode`・`message` を利用する
+    - **errorsの設定ルール**
+        - key はリクエストのキー名(JSONのキー名)とする。snake_case変換している場合は変換後の名前にする
+        - `@PathVariable`・`@RequestParam` の場合の key はパラメータ名とする
+        - 同じ項目に複数のエラーがある場合は、最初の1件のみ設定する
+        - アノテーションの `message` 属性に日本語のメッセージを必ず指定する(デフォルトメッセージは使用しない)
+    - **バリデーションの記述場所**
+        - `dto/request` を引数にする場合は、dtoのフィールドにバリデーションアノテーションを付与し、controllerの引数に `@Valid` を付ける
+        - `@PathVariable`・`@RequestParam` の場合は、controllerの引数に直接アノテーションを付与する
+        - controllerのクラスには `@Validated` を付けない(付けると `ConstraintViolationException` が発生し、上記のハンドラーで拾えなくなるため)
+    - **ログ出力**
+        - `WARN` で出力し、スタックトレースは出力しない
+        - 入力された値(rejected value)はログに出力しない(項目名とメッセージのみ出力する)
+    - **リクエスト形式不正(JSON不正・型不一致)**
+        - `HttpMessageNotReadableException` はバリデーションエラーとは区別し、`400 BAD_REQUEST`・errorCode `INVALID_REQUEST_BODY`・固定メッセージ(`ErrorResponse`)で返す
+        - ログは `WARN` で出力し、スタックトレースは出力しない
 - **GlobalExceptionHandler**
     - **引数**
         - 各例外に関するException関係のクラスオブジェクト
     - **戻り値**
         - `ResponseEntity` クラスオブジェクト
     - **制約**
-        - `GlobalExceptionHandler` は業務例外の場合は `BusinessException` を1回だけ `@ExceptionHandler` し、例外が保持する値を取り出して共通の `ErrorResponse` を組み立てて返す。その他の例外は一つずつ記述を行う。
+        - `GlobalExceptionHandler` は業務例外の場合は `BusinessException` を1回だけ `@ExceptionHandler` し、例外が保持する値を取り出して共通の `ErrorResponse` を組み立てて返す。ただし `BusinessException` を継承した `ValidationException` は項目別のエラーを持つため、別途 `@ExceptionHandler` で処理し `ValidationErrorResponse` を返す。その他の例外は一つずつ記述を行う。
         - `@RestControllerAdvice` ・`@ExceptionHandler` を使用する
+        - すべての `@ExceptionHandler` 内で、上記ログ出力ルールに従いログを出力してからレスポンスを返す
+        - 存在しないURLへのアクセス(`NoResourceFoundException`)は `404 NOT_FOUND`・errorCode `RESOURCE_NOT_FOUND` で返す(個別に処理しないと `Exception` のハンドラーに拾われ500になるため)
+        - 想定外の例外(`Exception`)は `500 INTERNAL_SERVER_ERROR`・errorCode `INTERNAL_SERVER_ERROR`・固定メッセージで返す
 
 ---
 
