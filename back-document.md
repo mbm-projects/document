@@ -713,9 +713,163 @@ MyBatisやSpring Securityの設定を除く、各種ライブラリ・フレー�
 
 ### doc
 
-springdoc-openapiで扱う仕様書などや仕様書のURLをまとめたファイルを配置する
+springdoc-openapi（Swagger）で表示するAPI仕様書の定義を配置する。
+Controllerには仕様書の記述を直接書かず、この層のアノテーションを付与するだけにする。
 
 - **ディレクトリ構成**
+
+```
+  doc/
+  ├── SampleApiDoc.java
+  ├── UserApiDoc.java
+  └── AuthApiDoc.java
+```
+
+- **ファイル構成・命名**
+  * Controllerと1対1でファイルを作成する
+  * クラス名は `{Controller名からControllerを除いた名前}ApiDoc` とする
+    + 例：`SampleController` → `SampleApiDoc`
+  * 1つのApiDocクラスの中に、エンドポイント（Controllerのメソッド）ごとにアノテーション（`@interface`）を定義する
+  * アノテーション名はHTTPメソッド名（`Get`, `Post`, `Put`, `Patch`, `Delete`）とする
+    + 同じHTTPメソッドが複数ある場合は用途を付ける（例：`GetList`, `GetById`）
+
+- **記述内容**
+  * `@Operation`：`summary`（一言）と `description`（テキストブロック）を必ず記述する
+    + `description` には処理の概要・必須項目・エラー条件などを箇条書きで書く
+  * `@RequestBody`：リクエストボディがある場合に記述する
+    + `content` の `schema` と `@ExampleObject` を使い、**リクエストのJSON例はこのファイルに直接書く**
+  * `@Parameter`：`@PathVariable`・`@RequestParam` がある場合に記述する（`name`・`in`・`description`・`example`）
+  * `@ApiResponse`：返しうるステータスコードごとに記述する
+    + 成功時：`content` の `schema` と `@ExampleObject` で **レスポンスのJSON例をこのファイルに直接書く**
+    + エラー時：`ErrorResponse`（バリデーションエラーは `ValidationErrorResponse`）を `schema` に指定し、エラーのJSON例を書く
+    + ステータスコードは「HTTPSTATUS」の表に従う
+
+- **制約**
+  * Controllerクラスに付けてよいのは `@Tag`（クラス）とApiDocのアノテーション（メソッド）のみ
+    + `@Operation`・`@ApiResponse` などをControllerに直接書かない
+  * `dto/request`・`dto/response` のフィールドに `@Schema` を付与しない（仕様書の記述はこの層に集約する）
+  * アノテーションには `@Target(ElementType.METHOD)` と `@Retention(RetentionPolicy.RUNTIME)` を必ず付ける
+  * 業務ロジックは記述しない
+  * 仕様書の文言はすべて日本語で記述する
+  * Controllerのエンドポイントを追加・変更したら、対応するApiDocも同時に更新する
+
+- **コード例**
+
+  ApiDoc
+
+```java
+  package com.example.project.doc;
+
+  import io.swagger.v3.oas.annotations.Operation;
+  import io.swagger.v3.oas.annotations.media.Content;
+  import io.swagger.v3.oas.annotations.media.ExampleObject;
+  import io.swagger.v3.oas.annotations.media.Schema;
+  import io.swagger.v3.oas.annotations.parameters.RequestBody;
+  import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
+  import java.lang.annotation.ElementType;
+  import java.lang.annotation.Retention;
+  import java.lang.annotation.RetentionPolicy;
+  import java.lang.annotation.Target;
+
+  /**
+   * SampleControllerのAPI仕様書定義
+   */
+  public class SampleApiDoc {
+
+      /** サンプルデータ取得 */
+      @Target(ElementType.METHOD)
+      @Retention(RetentionPolicy.RUNTIME)
+      @Operation(summary = "サンプルデータ取得", description = """
+          固定のサンプルJSONを返すエンドポイント。
+          動作確認・疎通確認用途のダミーAPI。
+          """)
+      @ApiResponse(responseCode = "200", description = "取得成功",
+          content = @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = SampleResponseDto.class),
+              examples = @ExampleObject(name = "成功", value = """
+                  {
+                    "id": 1,
+                    "name": "サンプル太郎",
+                    "email": "sample@example.com",
+                    "active": true
+                  }
+                  """)))
+      public @interface Get {
+      }
+
+      /** サンプルデータ作成 */
+      @Target(ElementType.METHOD)
+      @Retention(RetentionPolicy.RUNTIME)
+      @Operation(summary = "サンプルデータ作成", description = """
+          リクエストされたname, emailをもとにサンプルデータを作成する。
+
+          - name, email は必須
+          - email形式が不正な場合は400を返す
+          - activeは常にtrueで作成される
+          """)
+      @RequestBody(required = true,
+          content = @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = SampleRequestDto.class),
+              examples = @ExampleObject(name = "リクエスト例", value = """
+                  {
+                    "name": "サンプル太郎",
+                    "email": "sample@example.com"
+                  }
+                  """)))
+      @ApiResponse(responseCode = "200", description = "作成成功",
+          content = @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = SampleResponseDto.class),
+              examples = @ExampleObject(name = "成功", value = """
+                  {
+                    "id": 1,
+                    "name": "サンプル太郎",
+                    "email": "sample@example.com",
+                    "active": true
+                  }
+                  """)))
+      @ApiResponse(responseCode = "400", description = "バリデーションエラー",
+          content = @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = ValidationErrorResponse.class),
+              examples = @ExampleObject(name = "バリデーションエラー", value = """
+                  {
+                    "errorCode": "VALIDATION_ERROR",
+                    "message": "入力内容に誤りがあります",
+                    "errors": {
+                      "email": "メールアドレスの形式が正しくありません"
+                    }
+                  }
+                  """)))
+      public @interface Post {
+      }
+  }
+```
+
+  Controller
+
+```java
+  @RestController
+  @RequestMapping("/api/sample")
+  @Tag(name = "Sample", description = "動作確認用のサンプルAPI")
+  public class SampleController {
+
+      @GetMapping
+      @SampleApiDoc.Get
+      public SampleResponseDto getSample() {
+          ...
+      }
+
+      @PostMapping
+      @SampleApiDoc.Post
+      public SampleResponseDto createSample(@Valid @RequestBody SampleRequestDto requestDto) {
+          ...
+      }
+  }
+```
 
 ## 参考記事
 
