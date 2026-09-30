@@ -23,7 +23,7 @@
 | **インポート** | ワイルドカード（`*`）によるインポートは禁止し、クラスを個別に指定する | NG: `import java.util.*;` |
 | **アノテーション** | クラス・メソッドに付与するアノテーションは、宣言とは別の行に記述する | `@Override`<br>`public void run() { ... }` |
 | **例外処理** | catchした例外を何もせずに握り潰すことを禁止する | 業務例外は独自例外（`BusinessException` の継承クラス）に変換してthrowするか、ログを出力する |
-| **Lombok** | 必要最低限のアノテーションのみ使用する | `@Data` は使用可。ただしsetterやコンストラクタが不要な場合は `@Getter` など必要なものだけを付与する |
+| **Lombok** | 必要最低限のアノテーションのみ使用する。**`entity` / `dto` 配下のクラスは、下記「entity / dto 共通のLombokアノテーション」の一式を必須とする。** それ以外のクラスでは `@Data` は使用可。ただしsetterやコンストラクタが不要な場合は `@Getter` など必要なものだけを付与する | `entity` / `dto` では `@Data` は使用しない（`@ToString` の個別制御のため） |
 | **アクセス修飾子** | フィールドは原則 `private` とし、外部から参照する場合はgetter経由とする | `private String userName;` |
 | **コメント** | クラス・メソッドには必ずJavadocコメントを記述し、処理内にも適宜コメントを残す | `/** ユーザー情報を取得する */`<br>`// 入力値をチェックする` |
 | **未使用コード** | 未使用のimport・変数・デッドコードを残さない | IDEの警告（黄色の下線）はその都度解消する |
@@ -79,7 +79,6 @@
 | Cookie | COOKIE_DOMAIN | Cookieの発行対象ドメイン | localhost | application-{profile}.yml |
 | Server | SERVER_PORT | Spring Bootアプリ（バックエンド）の起動ポート | 8080 | application-{profile}.yml |
 | Profile | SPRING_PROFILES_ACTIVE | 使用するプロファイル（環境切り替え） | local / dev / prod | 起動時オプション or .env |
-|  |  |  |  |  |
 
 ## application.properties
 
@@ -147,10 +146,10 @@
 | --- | --- | --- | --- |
 | main | main | main | 本番デプロイ対象。直接pushは禁止 |
 | develop | develop | develop | 開発統合ブランチ。各featureはここにマージ |
-| 機能開発 | feature/{issue番号}_{タスク名}_*{ユーザー名}* | feature/11_user-login_tanaka | 新機能・タスク単位の開発 |
-| バグ修正 | fix/{issue番号}_{タスク名}_*{ユーザー名}* | fix/22_fix-login-error_tanaka | develop上で見つかったバグ修正 |
-| 緊急修正 | hotfix/{issue番号}_{タスク名}*{ユーザー名}* | hotfix/33_fix-critical-bug_tanaka | 本番(main)で発生した緊急バグの修正 |
-| インフラ整備 | infra/{issue番号}_{タスク名}*{ユーザー名}*	 | infra/33_docker-setup_tanaka | 環境構築・インフラ等 |
+| 機能開発 | feature/{issue番号}_{タスク名}_{ユーザー名} | feature/11_user-login_tanaka | 新機能・タスク単位の開発 |
+| バグ修正 | fix/{issue番号}_{タスク名}_{ユーザー名} | fix/22_fix-login-error_tanaka | develop上で見つかったバグ修正 |
+| 緊急修正 | hotfix/{issue番号}_{タスク名}_{ユーザー名} | hotfix/33_fix-critical-bug_tanaka | 本番(main)で発生した緊急バグの修正 |
+| インフラ整備 | infra/{issue番号}_{タスク名}_{ユーザー名} | infra/33_docker-setup_tanaka | 環境構築・インフラ等 |
 
 #### メッセージ規約
 
@@ -181,10 +180,35 @@
 
 #### 用語解説
 
-- 単数：　引き数(引数の変数)・戻り値が一個という意味(引数・戻り値の欄に配列・コレクションがあればList<string>のような形で受け取ってよい)
-    - method(引数1))
+- 単数：引数(引数の変数)・戻り値が一個という意味(引数・戻り値の欄に配列・コレクションがあればList<String>のような形で受け取ってよい)
+    - method(引数1)
 - 複数：引数・戻り値が複数個でいいという意味
-    - method(引数1,引数2))
+    - method(引数1, 引数2)
+
+#### entity / dto 共通のLombokアノテーション
+
+`entity`、`dto/request`、`dto/response`、`dto/db`、`dto/` 直下のクラスには、以下のアノテーションを付与する。
+
+```java
+@Getter
+@Setter                // dto/request には付けない
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString
+public class UserResponse {
+    ...
+}
+```
+
+- コンストラクタは自前で書かず、`@NoArgsConstructor` と `@AllArgsConstructor` で生成する。
+- `@Builder` を付けるため、`@NoArgsConstructor` と `@AllArgsConstructor` は**必ずセットで付与する**（`@Builder` と `@NoArgsConstructor` を併用する場合、`@AllArgsConstructor` がないとコンパイルエラーになるため）。
+- `@ToString` は、パスワード・トークンなどの機密情報や個人情報を持つフィールドに `@ToString.Exclude` を付ける（ログ出力ルールに従い、機密情報・個人情報を出力しない）。
+- `@Data` は `@ToString` などを一括で生成するため、entity / dto では使用せず、上記のアノテーションを個別に付与する。
+- 継承関係のあるdtoで `@Builder` を使うと親クラスのフィールドがbuilderに含まれない。その場合は `@SuperBuilder` を使うか、継承を避ける。
+- フィールドが `final` のクラス（`ErrorResponse`・`ValidationErrorResponse` など）は `@NoArgsConstructor` を付けられないため、本ルールの対象外とする。
+
+---
 
 ### controller/api
 
@@ -199,12 +223,10 @@
         - `dto/response` パッケージのオブジェクト（単数）
         - プリミティブ型、String型、配列・コレクション・標準ライブラリ型オブジェクト等（単数）
         - `void`
-    
 - **制約**
-    - バリデーションは`dto/request`パッケージが引数の場合はdtoにその他の引数の場合は`controller/api`内に記述
-    - `entity`パッケージをそのまま戻り値・引数として使用しない
-    - `dto/db` は戻り値・引数では使用しない(`dto/request`,`dto/response` に詰めなおす)
-    
+    - バリデーションは `dto/request` パッケージが引数の場合はdtoに、その他の引数の場合は `controller/api` 内に記述
+    - `entity` パッケージをそのまま戻り値・引数として使用しない
+    - `dto/db` は戻り値・引数では使用しない(`dto/request`, `dto/response` に詰めなおす)
 
 ---
 
@@ -214,25 +236,25 @@
 
 - **引数**
     - `dto/request` パッケージオブジェクト
-    - `dto/db`  パッケージオブジェクト（複数可）
-    - その他`dto/`直下のパッケージのオブジェクト（複数可）
+    - `dto/db` パッケージオブジェクト（複数可）
+    - その他 `dto/` 直下のパッケージのオブジェクト（複数可）
     - `entity` パッケージのオブジェクト（複数可）
     - プリミティブ型、String型、配列・コレクション・標準ライブラリ型オブジェクト等（複数可）
     - その他オブジェクト(複数可)
     - `void`
 - **戻り値**
-    - `dto/response`  パッケージオブジェクト
-    - `dto/db`パッケージのオブジェクト（複数可,単数推奨）
-    - その他`dto/`直下のパッケージのオブジェクト（複数可,単数推奨）
-    - `entity`パッケージのオブジェクト(複数可,単数推奨)
+    - `dto/response` パッケージオブジェクト
+    - `dto/db` パッケージのオブジェクト（複数可, 単数推奨）
+    - その他 `dto/` 直下のパッケージのオブジェクト（複数可, 単数推奨）
+    - `entity` パッケージのオブジェクト(複数可, 単数推奨)
     - プリミティブ型、String型、配列・コレクション等（複数可）
     - `void`
     - その他オブジェクト(複数可)
 - **制約**
     - `@Transactional` 処理は基本この階層で行う
 - **その他**
-    - 単純な汎用関数は`util` に記載するので注意
-    - 外部から呼ばれる場合はpublic,関数内のコードが長くなる場合はprivateで関数化して呼び出す。
+    - 単純な汎用関数は `util` に記載するので注意
+    - 外部から呼ばれる場合はpublic、関数内のコードが長くなる場合はprivateで関数化して呼び出す。
     - serviceパッケージは制約緩いが学生の開発のためある程度の緩さは許容するものとする
 
 ---
@@ -251,24 +273,23 @@
     - `dto/db` パッケージのオブジェクト（単数）
     - プリミティブ型(int・longの件数など)、String型、配列・コレクション・その他DBカラムに関する標準ライブラリ型オブジェクト等（複数可）
 - **制約**
-    - 引数として`dto/request`を渡しそうになるが受け取ってはならない(汎用性を持たせるため)
-- その他
-    - insert（新規作成処理）の際自動採番のidの値を元のオブジェクトに詰めてもよい
-    - 引数として値のバリエーション(if文等)行う場合は記述せず、行う場合はserviceやutilなどで行う
-    - `repository`クラスは`service`クラスからのみ呼び出される
-    - `repository`クラスは`mapper`クラスからのみを呼びだす
-    - 引数`dto/db` パッケージ・`entity` パッケージの使い分け
+    - 引数として `dto/request` を渡しそうになるが受け取ってはならない(汎用性を持たせるため)
+- **その他**
+    - insert（新規作成処理）の際、自動採番のidの値を元のオブジェクトに詰めてもよい
+    - 引数として値のバリエーション(if文等)を行う場合は記述せず、行う場合はserviceやutilなどで行う
+    - `repository` クラスは `service` クラスからのみ呼び出される
+    - `repository` クラスは `mapper` クラスのみを呼び出す
+    - 引数 `dto/db` パッケージ・`entity` パッケージの使い分け
         - `entity` パッケージ
             - entityのフィールドをすべて利用する場合(例外として自動採番のid・デフォルト値が戻り値で使用する場合は空でよい)
         - `dto/db` パッケージ
-            - 上記の`entity` パッケージの利用条件を満たさない場合
-        - 例: INSERTで一部カラムのみ指定 → 引数はdto/db、全カラム取得 → 戻り値はentity
-    - 戻り値`dto/db` パッケージ・`entity` パッケージの使い分け
+            - 上記の `entity` パッケージの利用条件を満たさない場合
+        - 例: INSERTで一部カラムのみ指定 → 引数は `dto/db`、全カラム取得 → 戻り値は `entity`
+    - 戻り値 `dto/db` パッケージ・`entity` パッケージの使い分け
         - `entity` パッケージ
             - entityのフィールドをすべて利用する場合
         - `dto/db` パッケージ
-            - entityのフィールドをすべてを利用しない場合
-        
+            - entityのフィールドをすべては利用しない場合
 
 ---
 
@@ -277,19 +298,18 @@
 MyBatisのマッピングインターフェースです。基本はメソッドに `@Select` や `@Insert` などのアノテーションを付与して直接SQLを記述する。複雑なSQLになる場合のみXMLファイルを使用する。
 
 - **引数**
-    - `dto/db` オブジェクト (複数可,単数)
-    - `entity` オブジェクト (複数可,単数推奨)
-    - プリミティブ型((int・longの件数など))、String型、配列・コレクション・その他DBカラムに関する標準ライブラリ型オブジェクト等（複数可）
+    - `dto/db` オブジェクト (複数可, 単数)
+    - `entity` オブジェクト (複数可, 単数推奨)
+    - プリミティブ型(int・longの件数など)、String型、配列・コレクション・その他DBカラムに関する標準ライブラリ型オブジェクト等（複数可）
     - `void`
-    
 - **戻り値**
     - `entity` パッケージのオブジェクト（単数）
     - `dto/db` パッケージのオブジェクト（単数）
-    - プリミティブ型((int・longの件数など))、String型、配列・コレクション・その他DBカラムに関する標準ライブラリ型オブジェクト等（複数可：複数可だが特に3以上の場合はentityの利用及びdtoの作成推奨 ）
+    - プリミティブ型(int・longの件数など)、String型、配列・コレクション・その他DBカラムに関する標準ライブラリ型オブジェクト等（複数可：複数可だが特に3以上の場合はentityの利用及びdtoの作成推奨）
 - **制約**
     - アノテーションで書けない複雑なSQLでXMLファイルを使用する場合は、Javaファイル側（`src/main/java/...`）ではなく、**`src/main/resources` 配下にmapperと同じパッケージ階層のフォルダを作成して配置すること**。
-    - @Paramアノテーションを利用する
-    - `mapper`クラスは`repository`クラスからのみ呼び出される
+    - `@Param` アノテーションを利用する
+    - `mapper` クラスは `repository` クラスからのみ呼び出される
 
 ---
 
@@ -297,148 +317,162 @@ MyBatisのマッピングインターフェースです。基本はメソッド�
 
 データベースのテーブル構造と1対1でマッピングされるオブジェクト(Viewも含む)。
 
+- **アノテーション**
+    - 「entity / dto 共通のLombokアノテーション」の一式(`@Getter`, `@Setter`, `@NoArgsConstructor`, `@AllArgsConstructor`, `@Builder`, `@ToString`)を付与する
 - **フィールド**
     - プリミティブ型、String型、配列・コレクション等・その他DBカラムに関する標準ライブラリ型オブジェクト等
 - **引数**
-    - フィールドに関するもの(setter,コンストラクタのみ)
+    - フィールドに関するもの(`@Setter`、`@NoArgsConstructor`、`@AllArgsConstructor`、`@Builder` で生成されるもののみ)
 - **戻り値**
-    - フィールドに関するもの(getterのみ)
+    - フィールドに関するもの(`@Getter` で生成されるもののみ)
 - **制約**
     - テーブルの全カラムをフィールドとして持ち、データ型はDBの型と一致させる。
-    - レスポンスのオブジェクト構造の都合による加工用フィールドを追加してはならない(`dto/db`パッケージを作成し欲しいフィールドを追加する)。
+    - レスポンスのオブジェクト構造の都合による加工用フィールドを追加してはならない(`dto/db` パッケージを作成し欲しいフィールドを追加する)。
     - テーブル定義でnullを許容するフィールドはプリミティブ型ではなく対応するラッパークラスを使用する
-    - メソッドはコンストラクタ・setter・getterのみ。フィールドに関する値以外を引数・戻り値として扱ってはならない。
+    - メソッドはLombokで生成されるコンストラクタ・setter・getter・builder・toStringのみ(自前のメソッドは書かない)。フィールドに関する値以外を引数・戻り値として扱ってはならない。
     - Viewに関するentityはクラス名にViewをつける(ViewはデータベースのViewを指す)
-    - `entity`パッケージ内でのパッケージ訳はviewで独立させるのではなく、役割が近いクラスごとでパッケージ化を行う(例：userパッケージ以下 User.java,UserInfoView.java)
-- その他
-    - 引数として値のバリエーション(if文等)行う場合は記述せず、行う場合はserviceやutilなどで行う
+    - `entity` パッケージ内でのパッケージ分けはviewで独立させるのではなく、役割が近いクラスごとでパッケージ化を行う(例：userパッケージ以下 User.java, UserInfoView.java)
+- **その他**
+    - 引数として値のバリエーション(if文等)を行う場合は記述せず、行う場合はserviceやutilなどで行う
 
 ---
 
 ### dto
 
-リクエスト(request)、レスポンス(response)、entity以外の形でのDBアクセスオブジェクト(db)などのJavaオブジェクトを扱います。 `dto/request`・`dto/response`・`dto/db` ・その他(`dto/`直下)(dto/直下に直接配置や役割ごとにさらにパッケージを追加する)のサブパッケージに分類して配置する。
+リクエスト(request)、レスポンス(response)、entity以外の形でのDBアクセスオブジェクト(db)などのJavaオブジェクトを扱います。`dto/request`・`dto/response`・`dto/db`・その他(`dto/` 直下)(`dto/` 直下に直接配置や役割ごとにさらにパッケージを追加する)のサブパッケージに分類して配置する。
 
 #### dto/request
 
 Controllerが受け取るリクエスト内容を表現するオブジェクト。
 
+- **アノテーション**
+    - `@Getter`, `@NoArgsConstructor`, `@AllArgsConstructor`, `@Builder`, `@ToString` を付与する
+    - `@Setter` は付与しない
 - **フィールド**
     - プリミティブ型、String型、配列・コレクション・標準ライブラリ型オブジェクト等
-    - `dto/request/リクエストパッケージ名`直下のオブジェクト
+    - `dto/request/リクエストパッケージ名` 直下のオブジェクト
 - **引数**
-    - 開発者は明示的に呼び出すことはしない
-    - Jacksonなどのフレームワークが内部的に使用する(フィールドに関するもの(setter,コンストラクタのみ))
+    - 開発者は明示的に呼び出さない
+    - Jacksonなどのフレームワークが `@NoArgsConstructor` を利用して内部的に生成する
 - **戻り値**
-    - フィールドに関するもの(getterのみ)
+    - フィールドに関するもの(`@Getter` のみ)
 - **制約**
     - バリデーションアノテーション（`@NotNull`、`@Size`等）をフィールドに付与する。
-    - 基本getterのみを呼び出して利用し、コンストラクタ・setterは開発では利用しない(例外的にapiの内部処理等を変更する場合は利用可)
-    - requestで`{ user: {...} }` で受け取りたい場合
+    - 基本getterのみを呼び出して利用し、コンストラクタ・setter・builderは開発では利用しない(例外的にapiの内部処理の変更やテストコードでのインスタンス生成では利用可)
+    - requestで `{ user: {...} }` で受け取りたい場合
         - `entity` パッケージは利用しない
         - `entity` パッケージを利用せずdtoを作成し利用する場合
-            - 複数個所で使用されるdtoの場合
-                - その他(`dto/`直下)にdtoを作成し利用する
+            - 複数箇所で使用されるdtoの場合
+                - その他(`dto/` 直下)にdtoを作成し利用する
             - そのrequestのみでしか使用しないdtoの場合
-                - `dto/request/` パッケージにそのリクエスト用のパッケージを作成しその中にdtoを作成する(例：signinrequestパッケージを作成しその中にSigninRequest.javaとSinginStudentInfoDto.java)
+                - `dto/request/` パッケージにそのリクエスト用のパッケージを作成しその中にdtoを作成する(例：signinrequestパッケージを作成しその中にSigninRequest.javaとSigninStudentInfoDto.java)
 - **その他**
-    - `dto`パッケージオブジェクトを利用する場合はフィールド名をアノテーションを使用して変更する。
-    - `dto/db` ,`dto/response` パッケージと同じ構造を利用したい場合でも`dto/db` パッケージは使用せず、新しいその他`dtoパッケージ`に詰めなおして利用する。(他のの処理との結合度を低くするため)
-    
+    - `dto` パッケージオブジェクトを利用する場合はフィールド名をアノテーションを使用して変更する。
+    - `dto/db`, `dto/response` パッケージと同じ構造を利用したい場合でも `dto/db` パッケージは使用せず、新しいその他 `dto` パッケージに詰めなおして利用する。(他の処理との結合度を低くするため)
 
 #### dto/response
 
 Controllerが返却するレスポンス内容を表現するオブジェクト。
 
+- **アノテーション**
+    - 「entity / dto 共通のLombokアノテーション」の一式(`@Getter`, `@Setter`, `@NoArgsConstructor`, `@AllArgsConstructor`, `@Builder`, `@ToString`)を付与する
 - **フィールド**
     - プリミティブ型、String型、配列・コレクション・標準ライブラリ型オブジェクト等
-    - `dto/response/レスポンスパッケージ名`直下のオブジェクト
+    - `dto/response/レスポンスパッケージ名` 直下のオブジェクト
 - **引数**
-    - フィールドに関するもの(setter,コンストラクタのみ)
+    - フィールドに関するもの(`@AllArgsConstructor`、`@NoArgsConstructor`、`@Builder`、`@Setter` のみ)
 - **戻り値**
-    - フィールドに関するもの(getterのみ)
+    - フィールドに関するもの(`@Getter` のみ)
 - **制約**
-    - setter,getter.コンストラクタのみを呼び出して利用する。
-    - responseで`{ user: {...} }` で返したい場合
+    - Lombokで生成されるコンストラクタ・setter・getter・builderのみを呼び出して利用する。
+    - responseで `{ user: {...} }` で返したい場合
         - `entity` パッケージは利用しない
         - `entity` パッケージを利用せずdtoを作成し利用する場合
-            - 複数個所で使用されるdtoの場合
-                - その他(`dto/`直下)にdtoを作成し利用する
+            - 複数箇所で使用されるdtoの場合
+                - その他(`dto/` 直下)にdtoを作成し利用する
             - そのresponseのみでしか使用しないdtoの場合
                 - `dto/response/` パッケージにそのレスポンス用のパッケージを作成しその中にdtoを作成する(例：userinforesponse/パッケージを作成しその中にUserInfoResponse.javaとClassInfoDto.java)
-    - エラーレスポンスオブジェクトは`exception`パッケージのカスタム例外をスローして対応する
-    - `dto/db` 同じ構造(dbの結果をそのまま返す)は`of` メソッド(`dto/db` の内容を詰め替える)を用意する
+    - エラーレスポンスオブジェクトは `exception` パッケージのカスタム例外をスローして対応する
+    - `dto/db` と同じ構造(dbの結果をそのまま返す)は `of` メソッド(`dto/db` の内容を詰め替える)を用意する
+        - `of` メソッドは自前のstaticメソッドであり、本ルールの例外として記述してよい。インスタンスの生成にはbuilderを使ってよい
         - コード例(これを呼び出す)
-            
+
+            ```java
             public static UserResponseDto of(UserDbDto userDbDto) {
-            return new UserResponseDto(
-            entity.getId(),
-            entity.getName(),
-            entity.getEmail(),
-            entity.getBirthday().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")),
-            Period.between(entity.getBirthday(), LocalDate.now()).getYears()
-            );
+                return UserResponseDto.builder()
+                    .id(userDbDto.getId())
+                    .name(userDbDto.getName())
+                    .email(userDbDto.getEmail())
+                    .birthday(userDbDto.getBirthday().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")))
+                    .age(Period.between(userDbDto.getBirthday(), LocalDate.now()).getYears())
+                    .build();
             }
-            
+            ```
+
         - リストの場合
-        
-        `List<UserDetailViewDto> dtoList = userList.stream()
-        .map(UserDetailViewDto::of) // ★ これだけで全件変換できる！
-        .toList();`
-        
+
+            ```java
+            List<UserResponseDto> dtoList = userList.stream()
+                .map(UserResponseDto::of) // これだけで全件変換できる
+                .toList();
+            ```
+
 - **その他**
-    - `dto`パッケージオブジェクトを利用する場合はフィールド名をアノテーションを使用して変更する。
-    - `dto/db` ,`dto/request` パッケージと同じ構造を利用したい場合でも`dto/db` パッケージは使用せず、新しいに詰めなおして利用する。(他の処理との結合度を低くするため)
+    - `dto` パッケージオブジェクトを利用する場合はフィールド名をアノテーションを使用して変更する。
+    - `dto/db`, `dto/request` パッケージと同じ構造を利用したい場合でも `dto/db` パッケージは使用せず、新しいその他 `dto` パッケージに詰めなおして利用する。(他の処理との結合度を低くするため)
 
 #### dto/db
 
 Repository・Mapperで扱う、entityでは表現できないDBアクセス用オブジェクト（複数テーブルのJOIN結果、集計結果、検索条件等）。
 
+- **アノテーション**
+    - 「entity / dto 共通のLombokアノテーション」の一式(`@Getter`, `@Setter`, `@NoArgsConstructor`, `@AllArgsConstructor`, `@Builder`, `@ToString`)を付与する
 - **フィールド**
-    - `entity`パッケージのオブジェクト
+    - `entity` パッケージのオブジェクト
     - プリミティブ型、String型、配列・コレクション・標準ライブラリ型オブジェクト等
-    - `dto/db/dbパッケージ名`直下のオブジェクト
+    - `dto/db/dbパッケージ名` 直下のオブジェクト
 - **引数**
-    - フィールドに関するもの(setter,コンストラクタのみ)
+    - フィールドに関するもの(`@AllArgsConstructor`、`@NoArgsConstructor`、`@Builder`、`@Setter` のみ)
 - **戻り値**
-    - フィールドに関するもの(getterのみ)
+    - フィールドに関するもの(`@Getter` のみ)
 - **制約**
-    - setter,getter.コンストラクタのみを呼び出して利用する。
-    - `{ user: {...} }` のフィードを使用したい場合
+    - Lombokで生成されるコンストラクタ・setter・getter・builderのみを呼び出して利用する。
+    - `{ user: {...} }` のフィールドを使用したい場合
         - `entity` パッケージを利用する
         - `entity` パッケージを利用せずdtoを作成し利用する場合
-            - 複数個所で使用されるdb関係のdtoの場合
-                - その他(`dto/db`直下)にdb関係のdtoを作成し利用する
-            - その`dto/db`のみでしか使用しないdtoの場合
-                - `dto/db/` パッケージにその`dto/db`用のパッケージを作成しその中にdtoを作成する(例：userdbdto/パッケージを作成しその中にUserDbDto.javaとUserInfoDbDto.java)
+            - 複数箇所で使用されるdb関係のdtoの場合
+                - その他(`dto/db` 直下)にdb関係のdtoを作成し利用する
+            - その `dto/db` のみでしか使用しないdtoの場合
+                - `dto/db/` パッケージにその `dto/db` 用のパッケージを作成しその中にdtoを作成する(例：userdbdto/パッケージを作成しその中にUserDbDto.javaとUserInfoDbDto.java)
 - **その他**
-    - 他の`dto/` パッケージと同じ構造を利用したい場合でも他の`dto/` パッケージは使用せず、新しく`dto/db`パッケージを作成して利用する。(他の処理の結合度を低くするため)
+    - 他の `dto/` パッケージと同じ構造を利用したい場合でも他の `dto/` パッケージは使用せず、新しく `dto/db` パッケージを作成して利用する。(他の処理との結合度を低くするため)
 
 #### dto/直下
 
- `dto/request`・`dto/response`・`dto/db` に含まれないその他のdto
+`dto/request`・`dto/response`・`dto/db` に含まれないその他のdto
 
-- **フィード**
-    - `entity`パッケージのオブジェクト(`dto/request`・`dto/response`内で利用される場合は利用不可)
+- **アノテーション**
+    - 「entity / dto 共通のLombokアノテーション」の一式(`@Getter`, `@Setter`, `@NoArgsConstructor`, `@AllArgsConstructor`, `@Builder`, `@ToString`)を付与する
+- **フィールド**
+    - `entity` パッケージのオブジェクト(`dto/request`・`dto/response` 内で利用される場合は利用不可)
     - プリミティブ型、String型、配列・コレクション・標準ライブラリ型オブジェクト等
     - その他オブジェクト
     - その他(`dto/` 直下)パッケージのオブジェクト
 - **引数**
-    - フィールドに関するもの(setter,コンストラクタのみ)
+    - フィールドに関するもの(`@AllArgsConstructor`、`@NoArgsConstructor`、`@Builder`、`@Setter` のみ)
 - **戻り値**
-    - フィールドに関するもの(getterのみ)
+    - フィールドに関するもの(`@Getter` のみ)
 - **制約**
-    - setter,getter.コンストラクタのみを呼び出して利用する。
-    - `{ user: {...} }` のフィードを使用したい場合
-        - `entity`パッケージのオブジェクト(`dto/request`・`dto/response`内で利用される場合は利用不可)
+    - Lombokで生成されるコンストラクタ・setter・getter・builderのみを呼び出して利用する。
+    - `{ user: {...} }` のフィールドを使用したい場合
+        - `entity` パッケージのオブジェクト(`dto/request`・`dto/response` 内で利用される場合は利用不可)
         - `entity` パッケージを利用せずdtoを作成し利用する場合
-            - 複数個所で使用されるdtoの場合
-                - その他(`dto/`直下)にdtoを作成し利用する
-            - その`dto/`のみでしか使用しないdtoの場合
-                - その他(`dto/`直下)パッケージにそのdto用のパッケージを作成しその中にdtoを作成する(例：userInfodto/パッケージを作成しその中にUserInfoDto.javaとUser○○Dto.java)
-    
+            - 複数箇所で使用されるdtoの場合
+                - その他(`dto/` 直下)にdtoを作成し利用する
+            - その `dto/` のみでしか使用しないdtoの場合
+                - その他(`dto/` 直下)パッケージにそのdto用のパッケージを作成しその中にdtoを作成する(例：userInfodto/パッケージを作成しその中にUserInfoDto.javaとUser○○Dto.java)
 - **その他**
-    - `dto/db` ,`dto/request` ,`dto/response`パッケージと同じ構造を利用したい場合でも`dto/db` パッケージは使用せず、新しいその他`dtoパッケージ`に詰めなおして利用する。(他の処理との結合度を低くするため)
+    - `dto/db`, `dto/request`, `dto/response` パッケージと同じ構造を利用したい場合でも、それらのパッケージは使用せず、新しいその他 `dto` パッケージに詰めなおして利用する。(他の処理との結合度を低くするため)
 
 ---
 
@@ -447,46 +481,45 @@ Repository・Mapperで扱う、entityでは表現できないDBアクセス用�
 DBの区分値（ステータスコードなど）と日本語ラベルを紐付けるEnum（列挙型）などを配置します。
 
 - **フィールド**
-    
+
     enum型の以下の値を内包する
-    
+
     - code
         - int型
         - コードを表す
     - label
-        - String 型
+        - String型
         - コードに紐づく日本語名を表す
 - **制約**
     - 定義する値は必ず「数値（コード）」と「日本語（ラベル）」をセットで管理する。
     - 数値からEnumを逆引きする静的メソッド（`fromCode(int code)`）を用意する。
 - **実装する関数**
     - getCode()
-        
+
         codeの値(int)を返す
-        
+
         - 引数
             - なし
         - 戻り値
             - code(int)
     - getLabel()
-        
+
         codeからlabelを取得する
-        
+
         - 引数
             - なし
         - 戻り値
             - label(String)
     - fromCode()
-        
+
         codeの値からenumを逆引きする関数(db保存用)。
-        
+
         存在しない場合は例外を投げる
-        
+
         - 引数
             - code(int)
         - 戻り値
             - 定義したenum型
-        
 
 ---
 
@@ -497,12 +530,15 @@ DBの区分値（ステータスコードなど）と日本語ラベルを紐付
 - **パッケージ構成**
     - `exception` 直下: `BusinessException`・`ErrorResponse`・`GlobalExceptionHandler`
     - `exception/validation`: `ValidationException`・`ValidationErrorResponse` と、その継承クラス
-    - `exception/{役割名}`: 役割ごとの業務例外(例：`user/`,`auth/`)
+    - `exception/{役割名}`: 役割ごとの業務例外(例：`user/`, `auth/`)
+- **Lombokの扱い**
+    - 例外クラス・`ErrorResponse`・`ValidationErrorResponse` は `final` フィールドを持つ、または継承を前提とするため、「entity / dto 共通のLombokアノテーション」の対象外とする
+    - 各クラスに記載の「Lombokのgetterのみ」「コンストラクタを自前で記述」のルールに従う
 - **制約**
     - すべての業務例外は `BusinessException` を継承し、コンストラクタで `HttpStatus`・`errorCode`・`message` をセットする。
         - `GlobalExceptionHandler` は業務例外の場合は `BusinessException` を1回だけ `@ExceptionHandler` し、例外が保持する値を取り出して共通の `ErrorResponse` を組み立て、レスポンスとして返す。ただし `BusinessException` を継承した `ValidationException` は項目別のエラーを持つため、別途 `@ExceptionHandler` で処理し `ValidationErrorResponse` を返す。その他の例外は一つずつ記述を行い、`ErrorResponse` を返す。
-    - 各エクセプションは役割ごとにサブパッケージ化を行う。例：`user/`,`auth/`
-    - セキュリティ関係のhandlerは業務例外ではないため`security` パッケージ内に配置する
+    - 各エクセプションは役割ごとにサブパッケージ化を行う。例：`user/`, `auth/`
+    - セキュリティ関係のhandlerは業務例外ではないため `security` パッケージ内に配置する
     - バリデーションチェックのエラーも対応する
     - ログ出力は `GlobalExceptionHandler` で一元的に行う(ログルールは下記参照)
     - errorCodeは大文字スネークケース(例：`USER_NOT_FOUND`)で統一する
@@ -538,7 +574,7 @@ DBの区分値（ステータスコードなど）と日本語ラベルを紐付
         - なし
     - **制約**
         - `BusinessException` を継承する
-        - コンストラクタはsuper()を呼びだす
+        - コンストラクタは `super()` を呼び出す
         - サブパッケージ内に配置する
         - `message` にはログに出力してもよい情報のみ含める(パスワード等の機密情報を含めない)
 - **ErrorResponseクラス**
@@ -556,7 +592,7 @@ DBの区分値（ステータスコードなど）と日本語ラベルを紐付
     - **戻り値**
         - フィールドに関するもの(getterのみ)
     - **制約**
-        - `exception`直下に配置する
+        - `exception` 直下に配置する
         - Lombokのgetterのみを利用する
         - 継承されることを想定し、フィールドは `private final`、コンストラクタは `public` とする
 - **BusinessException**
@@ -578,11 +614,11 @@ DBの区分値（ステータスコードなど）と日本語ラベルを紐付
             - message
                 - String
     - **戻り値**
-        - ナシ
+        - なし
     - **制約**
         - Lombokを利用する(Getterのみ)
         - `RuntimeException` を継承する
-        - コンストラクタのアクセス修飾子は`protected`
+        - コンストラクタのアクセス修飾子は `protected`
 - **バリデーション(`exception/validation`)**
     - バリデーションエラーは項目別のエラーを返す特殊なエラーとして、`exception/validation` パッケージに独立して配置する
     - **ValidationErrorResponseクラス**
@@ -653,7 +689,7 @@ DBの区分値（ステータスコードなど）と日本語ラベルを紐付
         - `ResponseEntity` クラスオブジェクト
     - **制約**
         - `GlobalExceptionHandler` は業務例外の場合は `BusinessException` を1回だけ `@ExceptionHandler` し、例外が保持する値を取り出して共通の `ErrorResponse` を組み立てて返す。ただし `BusinessException` を継承した `ValidationException` は項目別のエラーを持つため、別途 `@ExceptionHandler` で処理し `ValidationErrorResponse` を返す。その他の例外は一つずつ記述を行う。
-        - `@RestControllerAdvice` ・`@ExceptionHandler` を使用する
+        - `@RestControllerAdvice`・`@ExceptionHandler` を使用する
         - すべての `@ExceptionHandler` 内で、上記ログ出力ルールに従いログを出力してからレスポンスを返す
         - 存在しないURLへのアクセス(`NoResourceFoundException`)は `404 NOT_FOUND`・errorCode `RESOURCE_NOT_FOUND` で返す(個別に処理しないと `Exception` のハンドラーに拾われ500になるため)
         - 想定外の例外(`Exception`)は `500 INTERNAL_SERVER_ERROR`・errorCode `INTERNAL_SERVER_ERROR`・固定メッセージで返す
@@ -678,9 +714,9 @@ Spring Securityなどの認証・認可設定、認証フィルター、ユー�
         - SecurityConfigなどの設定ファイルを配置する
 - **制約**
     - セキュリティに関する設定は、このパッケージ内に集約し、他パッケージから設定を上書きできないようにする。
-    - exception関係のファイルは`exception/auth` パッケージに配置する
-    - handler関係のファイルは`security/handler` に配置する
-    - サブパッケージに該当しないファイルは`security` パッケージ直下に配置する
+    - exception関係のファイルは `exception/auth` パッケージに配置する
+    - handler関係のファイルは `security/handler` に配置する
+    - サブパッケージに該当しないファイルは `security` パッケージ直下に配置する
 
 ---
 
@@ -726,32 +762,32 @@ Controllerには仕様書の記述を直接書かず、この層のアノテー�
 ```
 
 - **ファイル構成・命名**
-  * Controllerと1対1でファイルを作成する
-  * クラス名は `{Controller名からControllerを除いた名前}ApiDoc` とする
-    + 例：`SampleController` → `SampleApiDoc`
-  * 1つのApiDocクラスの中に、エンドポイント（Controllerのメソッド）ごとにアノテーション（`@interface`）を定義する
-  * アノテーション名はHTTPメソッド名（`Get`, `Post`, `Put`, `Patch`, `Delete`）とする
-    + 同じHTTPメソッドが複数ある場合は用途を付ける（例：`GetList`, `GetById`）
+    - Controllerと1対1でファイルを作成する
+    - クラス名は `{Controller名からControllerを除いた名前}ApiDoc` とする
+        - 例：`SampleController` → `SampleApiDoc`
+    - 1つのApiDocクラスの中に、エンドポイント（Controllerのメソッド）ごとにアノテーション（`@interface`）を定義する
+    - アノテーション名はHTTPメソッド名（`Get`, `Post`, `Put`, `Patch`, `Delete`）とする
+        - 同じHTTPメソッドが複数ある場合は用途を付ける（例：`GetList`, `GetById`）
 
 - **記述内容**
-  * `@Operation`：`summary`（一言）と `description`（テキストブロック）を必ず記述する
-    + `description` には処理の概要・必須項目・エラー条件などを箇条書きで書く
-  * `@RequestBody`：リクエストボディがある場合に記述する
-    + `content` の `schema` と `@ExampleObject` を使い、**リクエストのJSON例はこのファイルに直接書く**
-  * `@Parameter`：`@PathVariable`・`@RequestParam` がある場合に記述する（`name`・`in`・`description`・`example`）
-  * `@ApiResponse`：返しうるステータスコードごとに記述する
-    + 成功時：`content` の `schema` と `@ExampleObject` で **レスポンスのJSON例をこのファイルに直接書く**
-    + エラー時：`ErrorResponse`（バリデーションエラーは `ValidationErrorResponse`）を `schema` に指定し、エラーのJSON例を書く
-    + ステータスコードは「HTTPSTATUS」の表に従う
+    - `@Operation`：`summary`（一言）と `description`（テキストブロック）を必ず記述する
+        - `description` には処理の概要・必須項目・エラー条件などを箇条書きで書く
+    - `@RequestBody`：リクエストボディがある場合に記述する
+        - `content` の `schema` と `@ExampleObject` を使い、**リクエストのJSON例はこのファイルに直接書く**
+    - `@Parameter`：`@PathVariable`・`@RequestParam` がある場合に記述する（`name`・`in`・`description`・`example`）
+    - `@ApiResponse`：返しうるステータスコードごとに記述する
+        - 成功時：`content` の `schema` と `@ExampleObject` で **レスポンスのJSON例をこのファイルに直接書く**
+        - エラー時：`ErrorResponse`（バリデーションエラーは `ValidationErrorResponse`）を `schema` に指定し、エラーのJSON例を書く
+        - ステータスコードは「HTTPSTATUS」の表に従う
 
 - **制約**
-  * Controllerクラスに付けてよいのは `@Tag`（クラス）とApiDocのアノテーション（メソッド）のみ
-    + `@Operation`・`@ApiResponse` などをControllerに直接書かない
-  * `dto/request`・`dto/response` のフィールドに `@Schema` を付与しない（仕様書の記述はこの層に集約する）
-  * アノテーションには `@Target(ElementType.METHOD)` と `@Retention(RetentionPolicy.RUNTIME)` を必ず付ける
-  * 業務ロジックは記述しない
-  * 仕様書の文言はすべて日本語で記述する
-  * Controllerのエンドポイントを追加・変更したら、対応するApiDocも同時に更新する
+    - Controllerクラスに付けてよいのは `@Tag`（クラス）とApiDocのアノテーション（メソッド）のみ
+        - `@Operation`・`@ApiResponse` などをControllerに直接書かない
+    - `dto/request`・`dto/response` のフィールドに `@Schema` を付与しない（仕様書の記述はこの層に集約する）
+    - アノテーションには `@Target(ElementType.METHOD)` と `@Retention(RetentionPolicy.RUNTIME)` を必ず付ける
+    - 業務ロジックは記述しない
+    - 仕様書の文言はすべて日本語で記述する
+    - Controllerのエンドポイントを追加・変更したら、対応するApiDocも同時に更新する
 
 - **コード例**
 
