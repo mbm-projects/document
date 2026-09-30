@@ -91,7 +91,6 @@
 | application.yml | db.username | DB接続ユーザー名 |
 | application.yml | db.password | DB接続パスワード |
 | application.yml | db.driver-class-name | JDBCドライバークラス（PostgreSQL） |
-| application.yml | spring.jackson.property-naming-strategy | JSONのプロパティ命名規則（snake_case変換など） |
 | application.yml | spring.jackson.default-property-inclusion | レスポンスJSONでnullフィールドを含めるかどうか |
 | application.yml | server.port | バックエンドの起動ポート |
 | application.yml | mybatis.configuration.map-underscore-to-camel-case | DBカラム名(snake_case)とJavaフィールド名(camelCase)の自動変換 |
