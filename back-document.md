@@ -277,7 +277,7 @@ public class UserResponse {
 - **その他**
     - insert（新規作成処理）の際、自動採番のidの値を元のオブジェクトに詰めてもよい
     - 引数として値のバリエーション(if文等)を行う場合は記述せず、行う場合はserviceやutilなどで行う
-    - `repository` クラスは `service` クラスからのみ呼び出される
+    - `repository` クラスは `service` クラスからのみ呼び出される(controlerや関連するservice以外(UserRepositoryならUserService以外)から呼び出してはならない)
     - `repository` クラスは `mapper` クラスのみを呼び出す
     - 引数 `dto/db` パッケージ・`entity` パッケージの使い分け
         - `entity` パッケージ
