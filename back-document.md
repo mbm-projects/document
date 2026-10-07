@@ -384,7 +384,12 @@ Controllerが返却するレスポンス内容を表現するオブジェクト�
 - **戻り値**
     - フィールドに関するもの(`@Getter` のみ)
 - **制約**
-    - Lombokで生成されるコンストラクタ・setter・getter・builderのみを呼び出して利用する。
+    - フィールドには必ず `@Schema(requiredMode = Schema.RequiredMode.REQUIRED)` を付与する
+        - OpenAPI の `required` に出力し、フロントエンドの自動生成型（Orval）でプロパティがオプショナル（`?:`）にならないようにするため
+        - `requiredMode` は仕様書への記載のみで、実行時のチェックは行わない。必須としたフィールドは、バックエンドが必ず値を設定する
+        - 値が null になりうるフィールドは、`nullable = true` を併せて指定する（型は `T | null` になる）
+        - 付与漏れを防ぐため、レビューでの確認項目とする
+    -  Lombokで生成されるコンストラクタ・setter・getter・builderのみを呼び出して利用する。
     - responseで `{ user: {...} }` で返したい場合
         - `entity` パッケージは利用しない
         - `entity` パッケージを利用せずdtoを作成し利用する場合
@@ -542,6 +547,8 @@ DBの区分値（ステータスコードなど）と日本語ラベルを紐付
     - バリデーションチェックのエラーも対応する
     - ログ出力は `GlobalExceptionHandler` で一元的に行う(ログルールは下記参照)
     - errorCodeは大文字スネークケース(例：`USER_NOT_FOUND`)で統一する
+    - `ErrorResponse`・`ValidationErrorResponse` のフィールドにも、dto/response と同様に `@Schema(requiredMode = Schema.RequiredMode.REQUIRED)` を付与する
+        -  `ValidationErrorResponse` の `errors` は、エラーのある項目のみをキーに持つマップとし、エラーがない場合も空のマップを設定して、必ず出力する
 - **ログ出力ルール**
     - **出力場所**
         - 例外のログは `GlobalExceptionHandler` の各 `@ExceptionHandler` 内で必ず出力する(ログを出さずにレスポンスだけ返してはならない)
@@ -783,11 +790,11 @@ Controllerには仕様書の記述を直接書かず、この層のアノテー�
 - **制約**
     - Controllerクラスに付けてよいのは `@Tag`（クラス）とApiDocのアノテーション（メソッド）のみ
         - `@Operation`・`@ApiResponse` などをControllerに直接書かない
-    - `dto/request`・`dto/response` のフィールドに `@Schema` を付与しない（仕様書の記述はこの層に集約する）
     - アノテーションには `@Target(ElementType.METHOD)` と `@Retention(RetentionPolicy.RUNTIME)` を必ず付ける
     - 業務ロジックは記述しない
     - 仕様書の文言はすべて日本語で記述する
     - Controllerのエンドポイントを追加・変更したら、対応するApiDocも同時に更新する
+    - ResponseDtoには必ず@Schema(requiredMode = Schema.RequiredMode.REQUIRED)を付与する(詳しくはresponseDtoの開発規約を確認)
 
 - **コード例**
 
