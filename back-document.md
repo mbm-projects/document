@@ -914,6 +914,28 @@ Controllerには仕様書の記述を直接書かず、この層のアノテー�
   }
 ```
 
+## その他
+### ログインユーザーのロールを取り出す
+
+Controller・Service・その他の処理で、ログインユーザーのロールが必要な場合は
+`security/CurrentUserRoles.get()` を使う。
+
+```java
+Set<RoleType> roles = CurrentUserRoles.get();
+```
+
+- 戻り値は `Set<RoleType>`。ログインユーザーが持つロールが全部入る
+  （管理者・生徒・実行委員長・ブース責任者・ブース担当者）。
+  - 例：生徒かつ実行委員長なら `[STUDENT, EXECUTIVE_CHAIR]`
+- 未ログインの場合は空の `Set` を返す。
+- 値は、認可のときにロール取得フィルターが Spring Security に保存したもの。`get()` で DB を再取得することはない。
+- 引数は不要で、どこからでも呼べる（`static` メソッド）。
+- 使う場面は、レスポンスにロールを含めたいとき（例：画面側でボタンの出し分けをするため）。
+- アクセスしてよいかの判定には使わない。
+  - URLごとの許可は `RoleRules` に書く。
+  - 認可を通過した後に業務ルールで拒否する場合は `PermissionDeniedException`（403）を投げる。
+
+
 ## 参考記事
 
 - https://beetle2001.hatenablog.com/entry/2026/03/18/202040
