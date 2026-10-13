@@ -42,13 +42,19 @@ GitHubのIssueを「親Issue」と「子Issue」で管理するためのテン�
 
 ### 表示イメージ
 
-> ## 詳細
-> （この親Issueで何をまとめるか。1〜2行。必要なら複数行でもよい）
->
-> ## 子Issue
-> - [ ] #
->
-> ※ 子Issueの下には、必要に応じて一覧などの内容を追記してよい（例：CSS一覧）
+<div markdown="1" style="border:1px solid #d0d7de;border-radius:6px;padding:4px 20px;background:#f6f8fa;overflow-x:auto;">
+
+## 詳細
+
+（この親Issueで何をまとめるか。1〜2行。必要なら複数行でもよい）
+
+## 子Issue
+
+- [ ] #
+
+※ 子Issueの下には、必要に応じて一覧などの内容を追記してよい（例：CSS一覧）
+
+</div>
 
 ### コピー用Markdown
 
@@ -109,27 +115,37 @@ GitHubのIssueの内容を作成する。親Issue1つに対して、複数の子
 
 ### 表示イメージ
 
-> ## 親Issue
-> #
->
-> ## 概要
-> （このIssueで何をするか。1〜2行）
->
-> ## 詳細
-> （詳しい仕様・補足）
->
-> ## 手順
->
-> ### 1.
->
-> ### 2.
->
-> ## 完了条件
-> - [ ]
->
-> ## その他
-> ### ブランチ名
-> `feature/{issue番号}_{機能名}_{ユーザー名}`
+<div markdown="1" style="border:1px solid #d0d7de;border-radius:6px;padding:4px 20px;background:#f6f8fa;overflow-x:auto;">
+
+## 親Issue
+
+#
+
+## 概要
+
+（このIssueで何をするか。1〜2行）
+
+## 詳細
+
+（詳しい仕様・補足）
+
+## 手順
+
+### 1.
+
+### 2.
+
+## 完了条件
+
+- [ ]
+
+## その他
+
+### ブランチ名
+
+`feature/{issue番号}_{機能名}_{ユーザー名}`
+
+</div>
 
 ### コピー用Markdown
 
@@ -227,47 +243,56 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 
 ### 表示イメージ
 
-> ## 概要
->
-> ## 子Issue
->
-> ## 詳細
-> 詳細は以下のSwagger UIに準ずる。
-> - Swagger UI:
-> - 詳細を書きます
->
-> ### 業務ルールチェック（自作の例外）
-> | チェック内容 | errorCode |
-> | --- | --- |
-> |  |  |
->
-> ### ステータス
->
-> #### Swagger UIに記載するステータス（必要に応じて編集する）
-> | HttpStatus | errorCode | レスポンス | 用途 |
-> | --- | --- | --- | --- |
-> | 200 / 201 | - | {レスポンスDTO} | {操作}成功 |
-> | 400 | VALIDATION_ERROR | ValidationErrorResponse | MethodArgumentNotValidException：@Valid のバリデーションエラーの場合。DTOにバリデーションアノテーションを書き、Controllerの引数に @Valid を付ける。messageは日本語で指定する |
-> | 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
-> | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
-> | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
-> | 409 | EVENT_ALREADY_EXISTS | ValidationErrorResponse | EventAlreadyExistsException：同名のイベントが登録済みの場合。重複チェックの箇所でthrowする（errors: title） |
-> | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | ImageTooLargeException：画像のサイズが上限（5MB）を超えた場合。画像のサイズチェックの箇所でthrowする |
-> | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：multipartの上限超過の場合。業務例外より先にSpringが投げて自動で413を返すが、max-file-size と max-request-size を扱うファイルの上限に合わせて設定する |
-> | 422 | INVALID_IMAGE_FILE | ValidationErrorResponse | InvalidImageFileException：画像の形式が不正な場合（jpeg・png・webp以外）。画像の形式チェックの箇所でthrowする（errors: image） |
->
-> #### アプリ側で自動的に返すステータス（共通で自動。何もしなくてよい）
-> | HttpStatus | errorCode | レスポンス | 用途 |
-> | --- | --- | --- | --- |
-> | 400 | INVALID_REQUEST_BODY | ErrorResponse | HttpMessageNotReadableException：JSON形式不正・型不一致の場合。自動で400にする |
-> | 400 | MISSING_PARAMETER | ErrorResponse | MissingServletRequestParameterException：クエリの必須パラメータが欠落している場合。自動で400にする |
-> | 400 | INVALID_PARAMETER_TYPE | ErrorResponse | MethodArgumentTypeMismatchException：/events/abc のような型違いの場合。自動で400にする |
-> | 400 | MISSING_PART | ErrorResponse | MissingServletRequestPartException：multipartで必須パートが無い場合。自動で400にする |
-> | 401 | UNAUTHORIZED | ErrorResponse | JwtAuthenticationEntryPoint：未ログイン・JWTの期限切れ・不正の場合。フィルター段階で返すため、例外は投げない |
-> | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。フィルター由来は JwtAccessDeniedHandler が、Controller・Service内で投げた場合は GlobalExceptionHandler が自動で403にする |
-> | 404 | RESOURCE_NOT_FOUND | ErrorResponse | NoResourceFoundException：存在しないURLへのアクセスの場合。自動で404にする |
-> | 415 | UNSUPPORTED_MEDIA_TYPE | ErrorResponse | HttpMediaTypeNotSupportedException：multipartやJSONの指定違い（Content-Typeの違い）の場合。自動で415にする |
-> | 500 | INTERNAL_SERVER_ERROR | ErrorResponse | Exception：想定外のエラーの場合。上記以外のすべてを自動で500にする |
+<div markdown="1" style="border:1px solid #d0d7de;border-radius:6px;padding:4px 20px;background:#f6f8fa;overflow-x:auto;">
+
+## 概要
+
+## 子Issue
+
+## 詳細
+
+詳細は以下のSwagger UIに準ずる。
+
+- Swagger UI:
+- 詳細を書きます
+
+### 業務ルールチェック（自作の例外）
+
+| チェック内容 | errorCode |
+| --- | --- |
+|  |  |
+
+### ステータス
+
+#### Swagger UIに記載するステータス（必要に応じて編集する）
+
+| HttpStatus | errorCode | レスポンス | 用途 |
+| --- | --- | --- | --- |
+| 200 / 201 | - | {レスポンスDTO} | {操作}成功 |
+| 400 | VALIDATION_ERROR | ValidationErrorResponse | MethodArgumentNotValidException：@Valid のバリデーションエラーの場合。DTOにバリデーションアノテーションを書き、Controllerの引数に @Valid を付ける。messageは日本語で指定する |
+| 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
+| 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
+| 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
+| 409 | EVENT_ALREADY_EXISTS | ValidationErrorResponse | EventAlreadyExistsException：同名のイベントが登録済みの場合。重複チェックの箇所でthrowする（errors: title） |
+| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | ImageTooLargeException：画像のサイズが上限（5MB）を超えた場合。画像のサイズチェックの箇所でthrowする |
+| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：multipartの上限超過の場合。業務例外より先にSpringが投げて自動で413を返すが、max-file-size と max-request-size を扱うファイルの上限に合わせて設定する |
+| 422 | INVALID_IMAGE_FILE | ValidationErrorResponse | InvalidImageFileException：画像の形式が不正な場合（jpeg・png・webp以外）。画像の形式チェックの箇所でthrowする（errors: image） |
+
+#### アプリ側で自動的に返すステータス（共通で自動。何もしなくてよい）
+
+| HttpStatus | errorCode | レスポンス | 用途 |
+| --- | --- | --- | --- |
+| 400 | INVALID_REQUEST_BODY | ErrorResponse | HttpMessageNotReadableException：JSON形式不正・型不一致の場合。自動で400にする |
+| 400 | MISSING_PARAMETER | ErrorResponse | MissingServletRequestParameterException：クエリの必須パラメータが欠落している場合。自動で400にする |
+| 400 | INVALID_PARAMETER_TYPE | ErrorResponse | MethodArgumentTypeMismatchException：/events/abc のような型違いの場合。自動で400にする |
+| 400 | MISSING_PART | ErrorResponse | MissingServletRequestPartException：multipartで必須パートが無い場合。自動で400にする |
+| 401 | UNAUTHORIZED | ErrorResponse | JwtAuthenticationEntryPoint：未ログイン・JWTの期限切れ・不正の場合。フィルター段階で返すため、例外は投げない |
+| 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。フィルター由来は JwtAccessDeniedHandler が、Controller・Service内で投げた場合は GlobalExceptionHandler が自動で403にする |
+| 404 | RESOURCE_NOT_FOUND | ErrorResponse | NoResourceFoundException：存在しないURLへのアクセスの場合。自動で404にする |
+| 415 | UNSUPPORTED_MEDIA_TYPE | ErrorResponse | HttpMediaTypeNotSupportedException：multipartやJSONの指定違い（Content-Typeの違い）の場合。自動で415にする |
+| 500 | INTERNAL_SERVER_ERROR | ErrorResponse | Exception：想定外のエラーの場合。上記以外のすべてを自動で500にする |
+
+</div>
 
 ### コピー用Markdown
 
@@ -441,52 +466,66 @@ API（機能）の親Issueにぶら下げる、作成・更新・削除などの
 
 ### 表示イメージ
 
-> ## 親Issue
-> #
->
-> ## 概要
->
-> ## 詳細
-> 詳細は親Issueの Swagger UI に準ずる。
-> - Swagger UI:
-> - 詳細を書きます
->
-> ### 業務ルールチェック（自作の例外）
-> | チェック内容 | errorCode |
-> | --- | --- |
-> |  |  |
->
-> ### ステータス
->
-> #### Swagger UIに記載するステータス（必要に応じて編集する）
-> （親Issue（API・CRUD）と同じ表）
->
-> #### アプリ側で自動的に返すステータス（共通で自動。何もしなくてよい）
-> （親Issue（API・CRUD）と同じ表）
->
-> ## 手順
->
-> ### 0. 前提
-> Swagger UIに必要な項目が出来ている前提。
->
-> ### 1. DTOにアノテーションを追記する
->
-> ### 2. 例外を追加する
->
-> ### 3. ======== 自分が行う手順をここに追記します ========
->
-> ### 4. Controllerに追記する
->
-> ### 5. Swagger UIで動作確認する
->
-> ### 6. 親Issueに自作例外の内容を追記する
->
-> ## 完了条件
-> - [ ]
->
-> ## その他
-> ### ブランチ名
-> `feature/{子Issue番号}_{機能名}_{ユーザー名}`
+<div markdown="1" style="border:1px solid #d0d7de;border-radius:6px;padding:4px 20px;background:#f6f8fa;overflow-x:auto;">
+
+## 親Issue
+
+#
+
+## 概要
+
+## 詳細
+
+詳細は親Issueの Swagger UI に準ずる。
+
+- Swagger UI:
+- 詳細を書きます
+
+### 業務ルールチェック（自作の例外）
+
+| チェック内容 | errorCode |
+| --- | --- |
+|  |  |
+
+### ステータス
+
+#### Swagger UIに記載するステータス（必要に応じて編集する）
+
+（親Issue（API・CRUD）と同じ表）
+
+#### アプリ側で自動的に返すステータス（共通で自動。何もしなくてよい）
+
+（親Issue（API・CRUD）と同じ表）
+
+## 手順
+
+### 0. 前提
+
+Swagger UIに必要な項目が出来ている前提。
+
+### 1. DTOにアノテーションを追記する
+
+### 2. 例外を追加する
+
+### 3. ======== 自分が行う手順をここに追記します ========
+
+### 4. Controllerに追記する
+
+### 5. Swagger UIで動作確認する
+
+### 6. 親Issueに自作例外の内容を追記する
+
+## 完了条件
+
+- [ ]
+
+## その他
+
+### ブランチ名
+
+`feature/{子Issue番号}_{機能名}_{ユーザー名}`
+
+</div>
 
 ### コピー用Markdown
 
