@@ -691,13 +691,14 @@ API親Issueの「AI向け補足」とあわせて、下記を渡す。
 - Swagger UIの作成手順は書かない。
 
 ## 手順
-手順は、次の0〜6の順で書く。詳細は書きすぎず、短く書く。
+手順は、次の0〜6の順で書く。(場合によって - 出なく ### でもか)
 
 - 0. 前提：Swagger UIに必要な項目が出来ている前提。
 - 1. DTOにアノテーションを追記する
 - 2. 例外を追加する
 - 3. 自分が行う手順（このIssueごとに内容が変わる。例：Repository・Serviceを作成する）
 - 4. Controllerに追記する
+- 5. RoleRules.javaに追記(adminAndStudentRules() or adminExecutiveChairAndBoothRules())
 - 5. Swagger UIで動作確認する
 - 6. 親Issueに自作例外の内容を追記する
 
