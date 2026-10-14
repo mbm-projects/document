@@ -273,10 +273,7 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
-| 409 | EVENT_ALREADY_EXISTS | ValidationErrorResponse | EventAlreadyExistsException：同名のイベントが登録済みの場合。重複チェックの箇所でthrowする（errors: title） |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | ImageTooLargeException：画像のサイズが上限（5MB）を超えた場合。画像のサイズチェックの箇所でthrowする |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：multipartの上限超過の場合。業務例外より先にSpringが投げて自動で413を返すが、max-file-size と max-request-size を扱うファイルの上限に合わせて設定する |
-| 422 | INVALID_IMAGE_FILE | ValidationErrorResponse | InvalidImageFileException：画像の形式が不正な場合（jpeg・png・webp以外）。画像の形式チェックの箇所でthrowする（errors: image） |
+
 
 #### アプリ側で自動的に返すステータス（共通で自動。何もしなくてよい）
 
@@ -321,10 +318,7 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
-| 409 | EVENT_ALREADY_EXISTS | ValidationErrorResponse | EventAlreadyExistsException：同名のイベントが登録済みの場合。重複チェックの箇所でthrowする（errors: title） |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | ImageTooLargeException：画像のサイズが上限（5MB）を超えた場合。画像のサイズチェックの箇所でthrowする |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：multipartの上限超過の場合。業務例外より先にSpringが投げて自動で413を返すが、max-file-size と max-request-size を扱うファイルの上限に合わせて設定する |
-| 422 | INVALID_IMAGE_FILE | ValidationErrorResponse | InvalidImageFileException：画像の形式が不正な場合（jpeg・png・webp以外）。画像の形式チェックの箇所でthrowする（errors: image） |
+
 
 #### アプリ側で自動的に返すステータス（共通で自動。何もしなくてよい）
 | HttpStatus | errorCode | レスポンス | 用途 |
@@ -431,10 +425,7 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
-| 409 | EVENT_ALREADY_EXISTS | ValidationErrorResponse | EventAlreadyExistsException：同名のイベントが登録済みの場合。重複チェックの箇所でthrowする（errors: title） |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | ImageTooLargeException：画像のサイズが上限（5MB）を超えた場合。画像のサイズチェックの箇所でthrowする |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：multipartの上限超過の場合。業務例外より先にSpringが投げて自動で413を返すが、max-file-size と max-request-size を扱うファイルの上限に合わせて設定する |
-| 422 | INVALID_IMAGE_FILE | ValidationErrorResponse | InvalidImageFileException：画像の形式が不正な場合（jpeg・png・webp以外）。画像の形式チェックの箇所でthrowする（errors: image） |
+| 409 | EVENT_ALREADY_EXISTS | ValidationErrorResponse | EventAlreadyExistsException：
 
 ### 気にしないこと（共通で自動、何もしなくてよい）
 
@@ -555,10 +546,7 @@ Swagger UIに必要な項目が出来ている前提。
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
-| 409 | EVENT_ALREADY_EXISTS | ValidationErrorResponse | EventAlreadyExistsException：同名のイベントが登録済みの場合。重複チェックの箇所でthrowする（errors: title） |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | ImageTooLargeException：画像のサイズが上限（5MB）を超えた場合。画像のサイズチェックの箇所でthrowする |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：multipartの上限超過の場合。業務例外より先にSpringが投げて自動で413を返すが、max-file-size と max-request-size を扱うファイルの上限に合わせて設定する |
-| 422 | INVALID_IMAGE_FILE | ValidationErrorResponse | InvalidImageFileException：画像の形式が不正な場合（jpeg・png・webp以外）。画像の形式チェックの箇所でthrowする（errors: image） |
+
 
 #### アプリ側で自動的に返すステータス（共通で自動。何もしなくてよい）
 | HttpStatus | errorCode | レスポンス | 用途 |
