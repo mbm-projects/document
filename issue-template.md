@@ -256,6 +256,16 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 - Swagger UI:
 - 詳細を書きます
 
+### 権限及びresponseするロール一覧
+
+| ロール | Spring Securityの権限名 | 意味 |
+| --- | --- | --- |
+| `ADMIN` | `ROLE_ADMIN` | 管理者 |
+| `STUDENT` | `ROLE_STUDENT` | 生徒 |
+| `EXECUTIVE_CHAIR` | `ROLE_EXECUTIVE_CHAIR` | 実行委員長 |
+| `BOOTH_LEADER` | `ROLE_BOOTH_LEADER` | ブース責任者 |
+| `BOOTH_STAFF` | `ROLE_BOOTH_STAFF` | ブース担当者 |
+
 ### 業務ルールチェック（自作の例外）
 
 | チェック内容 | errorCode |
@@ -309,6 +319,16 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 | --- | --- |
 |  |  |
 
+### 権限及びresponseするロール一覧
+
+| ロール | Spring Securityの権限名 | 意味 |
+| --- | --- | --- |
+| `ADMIN` | `ROLE_ADMIN` | 管理者 |
+| `STUDENT` | `ROLE_STUDENT` | 生徒 |
+| `EXECUTIVE_CHAIR` | `ROLE_EXECUTIVE_CHAIR` | 実行委員長 |
+| `BOOTH_LEADER` | `ROLE_BOOTH_LEADER` | ブース責任者 |
+| `BOOTH_STAFF` | `ROLE_BOOTH_STAFF` | ブース担当者 |
+
 ### ステータス
 
 #### Swagger UIに記載するステータス（必要に応じて編集する）
@@ -356,6 +376,16 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 - リクエストは `multipart/form-data`（画像ファイルを直接送信する）
 - 画像は保存後、そのURLをDBの `image_url` に保存し、レスポンスの `imageUrl` で返す
 - 画像の仕様：jpeg・png・webp、5MB以下
+
+### 権限及びresponseするロール一覧
+
+| ロール | Spring Securityの権限名 | 意味 |
+| --- | --- | --- |
+| `ADMIN` | `ROLE_ADMIN` | 管理者 |
+| `STUDENT` | `ROLE_STUDENT` | 生徒 |
+| `EXECUTIVE_CHAIR` | `ROLE_EXECUTIVE_CHAIR` | 実行委員長 |
+| `BOOTH_LEADER` | `ROLE_BOOTH_LEADER` | ブース責任者 |
+| `BOOTH_STAFF` | `ROLE_BOOTH_STAFF` | ブース担当者 |
 
 ### 業務ルールチェック（自作の例外）
 | チェック内容 | errorCode |
@@ -474,6 +504,17 @@ API（機能）の親Issueにぶら下げる、作成・更新・削除などの
 - Swagger UI:
 - 詳細を書きます
 
+### 権限及びresponseするロール一覧
+
+| ロール | Spring Securityの権限名 | 意味 |
+| --- | --- | --- |
+| `ADMIN` | `ROLE_ADMIN` | 管理者 |
+| `STUDENT` | `ROLE_STUDENT` | 生徒 |
+| `EXECUTIVE_CHAIR` | `ROLE_EXECUTIVE_CHAIR` | 実行委員長 |
+| `BOOTH_LEADER` | `ROLE_BOOTH_LEADER` | ブース責任者 |
+| `BOOTH_STAFF` | `ROLE_BOOTH_STAFF` | ブース担当者 |
+
+
 ### 業務ルールチェック（自作の例外）
 
 | チェック内容 | errorCode |
@@ -532,6 +573,16 @@ Swagger UIに必要な項目が出来ている前提。
 詳細は親Issueの Swagger UI に準ずる。
 - Swagger UI: 
 - 詳細を書きます
+
+### 権限及びresponseするロール一覧
+
+| ロール | Spring Securityの権限名 | 意味 |
+| --- | --- | --- |
+| `ADMIN` | `ROLE_ADMIN` | 管理者 |
+| `STUDENT` | `ROLE_STUDENT` | 生徒 |
+| `EXECUTIVE_CHAIR` | `ROLE_EXECUTIVE_CHAIR` | 実行委員長 |
+| `BOOTH_LEADER` | `ROLE_BOOTH_LEADER` | ブース責任者 |
+| `BOOTH_STAFF` | `ROLE_BOOTH_STAFF` | ブース担当者 |
 
 ### 業務ルールチェック（自作の例外）
 | チェック内容 | errorCode |
