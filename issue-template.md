@@ -257,6 +257,7 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 - 詳細を書きます
 
 ### APIURL
+url:
 
 ### 権限及びresponseするロール一覧
 
@@ -285,6 +286,7 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
+| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 
 #### アプリ側で自動的に返すステータス（共通で自動。何もしなくてよい）
@@ -298,7 +300,6 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 | 401 | UNAUTHORIZED | ErrorResponse | JwtAuthenticationEntryPoint：未ログイン・JWTの期限切れ・不正の場合。フィルター段階で返すため、例外は投げない |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。フィルター由来は JwtAccessDeniedHandler が、Controller・Service内で投げた場合は GlobalExceptionHandler が自動で403にする |
 | 404 | RESOURCE_NOT_FOUND | ErrorResponse | NoResourceFoundException：存在しないURLへのアクセスの場合。自動で404にする |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 | 415 | UNSUPPORTED_MEDIA_TYPE | ErrorResponse | HttpMediaTypeNotSupportedException：multipartやJSONの指定違い（Content-Typeの違い）の場合。自動で415にする |
 | 500 | INTERNAL_SERVER_ERROR | ErrorResponse | Exception：想定外のエラーの場合。上記以外のすべてを自動で500にする |
 
@@ -317,6 +318,7 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 - 詳細を書きます
 
 ### APIURL
+url:
 
 ### 業務ルールチェック（自作の例外）
 | チェック内容 | errorCode |
@@ -343,6 +345,7 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
+| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 
 #### アプリ側で自動的に返すステータス（共通で自動。何もしなくてよい）
@@ -355,7 +358,6 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 | 401 | UNAUTHORIZED | ErrorResponse | JwtAuthenticationEntryPoint：未ログイン・JWTの期限切れ・不正の場合。フィルター段階で返すため、例外は投げない |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。フィルター由来は JwtAccessDeniedHandler が、Controller・Service内で投げた場合は GlobalExceptionHandler が自動で403にする |
 | 404 | RESOURCE_NOT_FOUND | ErrorResponse | NoResourceFoundException：存在しないURLへのアクセスの場合。自動で404にする |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 | 415 | UNSUPPORTED_MEDIA_TYPE | ErrorResponse | HttpMediaTypeNotSupportedException：multipartやJSONの指定違い（Content-Typeの違い）の場合。自動で415にする |
 | 500 | INTERNAL_SERVER_ERROR | ErrorResponse | Exception：想定外のエラーの場合。上記以外のすべてを自動で500にする |
 ````
@@ -461,6 +463,7 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
+| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 ### 気にしないこと（共通で自動、何もしなくてよい）
 
@@ -473,7 +476,6 @@ API（機能）単位の親Issueです。Issue名は機能名のみ（例：イ�
 | 401 | UNAUTHORIZED | ErrorResponse | JwtAuthenticationEntryPoint：未ログイン・JWTの期限切れ・不正の場合。フィルター段階で返すため、例外は投げない |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。フィルター由来は JwtAccessDeniedHandler が、Controller・Service内で投げた場合は GlobalExceptionHandler が自動で403にする |
 | 404 | RESOURCE_NOT_FOUND | ErrorResponse | NoResourceFoundException：存在しないURLへのアクセスの場合。自動で404にする |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 | 415 | UNSUPPORTED_MEDIA_TYPE | ErrorResponse | HttpMediaTypeNotSupportedException：multipartやJSONの指定違い（Content-Typeの違い）の場合。自動で415にする |
 | 500 | INTERNAL_SERVER_ERROR | ErrorResponse | Exception：想定外のエラーの場合。上記以外のすべてを自動で500にする |
 ````
@@ -603,6 +605,7 @@ Swagger UIに必要な項目が出来ている前提。
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
+| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 
 #### アプリ側で自動的に返すステータス（共通で自動。何もしなくてよい）
@@ -615,7 +618,6 @@ Swagger UIに必要な項目が出来ている前提。
 | 401 | UNAUTHORIZED | ErrorResponse | JwtAuthenticationEntryPoint：未ログイン・JWTの期限切れ・不正の場合。フィルター段階で返すため、例外は投げない |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。フィルター由来は JwtAccessDeniedHandler が、Controller・Service内で投げた場合は GlobalExceptionHandler が自動で403にする |
 | 404 | RESOURCE_NOT_FOUND | ErrorResponse | NoResourceFoundException：存在しないURLへのアクセスの場合。自動で404にする |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 | 415 | UNSUPPORTED_MEDIA_TYPE | ErrorResponse | HttpMediaTypeNotSupportedException：multipartやJSONの指定違い（Content-Typeの違い）の場合。自動で415にする |
 | 500 | INTERNAL_SERVER_ERROR | ErrorResponse | Exception：想定外のエラーの場合。上記以外のすべてを自動で500にする |
 
