@@ -287,6 +287,7 @@ url:
 | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 #### Swagger UIにに記載しないが実装時意識すること
+| HttpStatus | errorCode | レスポンス | 用途 |
 | --- | --- | --- | --- |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
@@ -350,6 +351,7 @@ url:
 | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 #### Swagger UIにに記載しないが実装時意識すること
+| HttpStatus | errorCode | レスポンス | 用途 |
 | --- | --- | --- | --- |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
@@ -420,6 +422,7 @@ url:
 | 500 | INTERNAL_SERVER_ERROR | ErrorResponse | 想定外のエラー |
 
 #### Swagger UIにに記載しないが実装時意識すること
+| HttpStatus | errorCode | レスポンス | 用途 |
 | --- | --- | --- | --- |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
@@ -477,6 +480,7 @@ url:
 | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 #### Swagger UIにに記載しないが実装時意識すること
+| HttpStatus | errorCode | レスポンス | 用途 |
 | --- | --- | --- | --- |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
@@ -623,6 +627,7 @@ Swagger UIに必要な項目が出来ている前提。
 | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 #### Swagger UIにに記載しないが実装時意識すること
+| HttpStatus | errorCode | レスポンス | 用途 |
 | --- | --- | --- | --- |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
