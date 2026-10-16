@@ -283,7 +283,6 @@ url:
 | --- | --- | --- | --- |
 | 200 / 201 | - | {レスポンスDTO} | {操作}成功 |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | MethodArgumentNotValidException：@Valid のバリデーションエラーの場合。DTOにバリデーションアノテーションを書き、Controllerの引数に @Valid を付ける。messageは日本語で指定する |
-| 400 | INVALID_PARAMETER | ErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 #### Swagger UIにに記載しないが実装時意識すること
@@ -302,6 +301,7 @@ url:
 | 400 | INVALID_REQUEST_BODY | ErrorResponse | HttpMessageNotReadableException：JSON形式不正・型不一致の場合。自動で400にする |
 | 400 | MISSING_PARAMETER | ErrorResponse | MissingServletRequestParameterException：クエリの必須パラメータが欠落している場合。自動で400にする |
 | 400 | INVALID_PARAMETER_TYPE | ErrorResponse | MethodArgumentTypeMismatchException：/events/abc のような型違いの場合。自動で400にする |
+| 400 | INVALID_PARAMETER | ErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く。自動で400にする（@Valid と併用したメソッドでは @Valid 側のエラーもこちらで返る） |
 | 400 | MISSING_PART | ErrorResponse | MissingServletRequestPartException：multipartで必須パートが無い場合。自動で400にする |
 | 401 | UNAUTHORIZED | ErrorResponse | JwtAuthenticationEntryPoint：未ログイン・JWTの期限切れ・不正の場合。フィルター段階で返すため、例外は投げない |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。フィルター由来は JwtAccessDeniedHandler が、Controller・Service内で投げた場合は GlobalExceptionHandler が自動で403にする |
@@ -348,7 +348,6 @@ url:
 | --- | --- | --- | --- |
 | 200 / 201 | - | {レスポンスDTO} | {操作}成功 |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | MethodArgumentNotValidException：@Valid のバリデーションエラーの場合。DTOにバリデーションアノテーションを書き、Controllerの引数に @Valid を付ける。messageは日本語で指定する |
-| 400 | INVALID_PARAMETER | ErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 #### Swagger UIにに記載しないが実装時意識すること
@@ -366,6 +365,7 @@ url:
 | 400 | INVALID_REQUEST_BODY | ErrorResponse | HttpMessageNotReadableException：JSON形式不正・型不一致の場合。自動で400にする |
 | 400 | MISSING_PARAMETER | ErrorResponse | MissingServletRequestParameterException：クエリの必須パラメータが欠落している場合。自動で400にする |
 | 400 | INVALID_PARAMETER_TYPE | ErrorResponse | MethodArgumentTypeMismatchException：/events/abc のような型違いの場合。自動で400にする |
+| 400 | INVALID_PARAMETER | ErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く。自動で400にする（@Valid と併用したメソッドでは @Valid 側のエラーもこちらで返る） |
 | 400 | MISSING_PART | ErrorResponse | MissingServletRequestPartException：multipartで必須パートが無い場合。自動で400にする |
 | 401 | UNAUTHORIZED | ErrorResponse | JwtAuthenticationEntryPoint：未ログイン・JWTの期限切れ・不正の場合。フィルター段階で返すため、例外は投げない |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。フィルター由来は JwtAccessDeniedHandler が、Controller・Service内で投げた場合は GlobalExceptionHandler が自動で403にする |
@@ -479,7 +479,6 @@ url:
 | HttpStatus | errorCode | レスポンス | 用途 |
 | --- | --- | --- | --- |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | MethodArgumentNotValidException：@Valid のバリデーションエラーの場合。DTOにバリデーションアノテーションを書き、Controllerの引数に @Valid を付ける。messageは日本語で指定する |
-| 400 | INVALID_PARAMETER | ErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 #### Swagger UIにに記載しないが実装時意識すること
@@ -497,6 +496,7 @@ url:
 | 400 | INVALID_REQUEST_BODY | ErrorResponse | HttpMessageNotReadableException：JSON形式不正・型不一致の場合。自動で400にする |
 | 400 | MISSING_PARAMETER | ErrorResponse | MissingServletRequestParameterException：クエリの必須パラメータが欠落している場合。自動で400にする |
 | 400 | INVALID_PARAMETER_TYPE | ErrorResponse | MethodArgumentTypeMismatchException：/events/abc のような型違いの場合。自動で400にする |
+| 400 | INVALID_PARAMETER | ErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く。自動で400にする（@Valid と併用したメソッドでは @Valid 側のエラーもこちらで返る） |
 | 400 | MISSING_PART | ErrorResponse | MissingServletRequestPartException：multipartで必須パートが無い場合。自動で400にする |
 | 401 | UNAUTHORIZED | ErrorResponse | JwtAuthenticationEntryPoint：未ログイン・JWTの期限切れ・不正の場合。フィルター段階で返すため、例外は投げない |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。フィルター由来は JwtAccessDeniedHandler が、Controller・Service内で投げた場合は GlobalExceptionHandler が自動で403にする |
@@ -627,7 +627,6 @@ Swagger UIに必要な項目が出来ている前提。
 | --- | --- | --- | --- |
 | 200 / 201 | - | {レスポンスDTO} | {操作}成功 |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | MethodArgumentNotValidException：@Valid のバリデーションエラーの場合。DTOにバリデーションアノテーションを書き、Controllerの引数に @Valid を付ける。messageは日本語で指定する |
-| 400 | INVALID_PARAMETER | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 #### Swagger UIにに記載しないが実装時意識すること
@@ -645,6 +644,7 @@ Swagger UIに必要な項目が出来ている前提。
 | 400 | INVALID_REQUEST_BODY | ErrorResponse | HttpMessageNotReadableException：JSON形式不正・型不一致の場合。自動で400にする |
 | 400 | MISSING_PARAMETER | ErrorResponse | MissingServletRequestParameterException：クエリの必須パラメータが欠落している場合。自動で400にする |
 | 400 | INVALID_PARAMETER_TYPE | ErrorResponse | MethodArgumentTypeMismatchException：/events/abc のような型違いの場合。自動で400にする |
+| 400 | INVALID_PARAMETER | ErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く。自動で400にする（@Valid と併用したメソッドでは @Valid 側のエラーもこちらで返る） |
 | 400 | MISSING_PART | ErrorResponse | MissingServletRequestPartException：multipartで必須パートが無い場合。自動で400にする |
 | 401 | UNAUTHORIZED | ErrorResponse | JwtAuthenticationEntryPoint：未ログイン・JWTの期限切れ・不正の場合。フィルター段階で返すため、例外は投げない |
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。フィルター由来は JwtAccessDeniedHandler が、Controller・Service内で投げた場合は GlobalExceptionHandler が自動で403にする |

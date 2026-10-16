@@ -247,7 +247,8 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
     | 5xx サーバ障害 | `lib/services/`（共通） | `ApiError` をthrow → `error.tsx` の汎用表示 | `ApiError` をthrow → `_hooks` でトースト表示等 |
     | ネットワーク断 | `lib/services/`（共通） | `ApiError(status: 0)` をthrow | `ApiError(status: 0)` をthrow |
     | 404 未存在 | 各 `_services` | **`notFound()`** を呼び `not-found.tsx` に任せる | `ApiError` をthrow → `_hooks` で表示 |
-    | 400 バリデーション | 各 `_services` | 発生しない（サーバー側は参照系のみ） | `fieldErrors` を詰めてthrow → `_hooks` で `setError` |
+    | 400 バリデーション（`VALIDATION_ERROR`） | 各 `_services` | 発生しない（サーバー側は参照系のみ） | `fieldErrors` を詰めてthrow → `_hooks` で `setError` |
+    | 400 パラメータ不正（`INVALID_PARAMETER`） | 各 `_services` | `ApiError` をthrow → `error.tsx` の汎用表示 | `fieldErrors` は反映せず `ApiError` をthrow → `_hooks` でトースト表示等（汎用エラー） |
     | 409 競合・業務エラー | 各 `_services` | `ApiError` をthrow → `error.tsx` の汎用表示 | `ApiError` をthrow → `_hooks` で文言表示 |
     
     ※ サーバーサイドでは `status` が `error.tsx` まで届かないため、404 以外はすべて汎用エラー画面となる。ステータスごとの文言の出し分けが要件にある画面は、クライアントサイドで取得する設計にする。
@@ -256,7 +257,7 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
     - ページ内カスタムフックス(useState・useEffect・useForm等)などの定義行う
     - ボタンを押したときのアクションや読み込み中（Loading）の判定など、コンポーネントから「動作の仕組み」を引き剥がして一括管理する。
     - APIへのデータ送信を伴うフォームは、`useForm` をこの `_hooks/` 内で定義する
-    - サーバー側のバリデーションエラー（400）は `_services` からthrowされた `ApiError` をここで受け、その `fieldErrors` を `setError` などでフォームに反映する。認証切れなどの共通エラーは `lib/services/` 側で処理済みのため、ここでは扱わない。
+    - サーバー側のバリデーションエラー（400 `VALIDATION_ERROR`）は `_services` からthrowされた `ApiError` をここで受け、その `fieldErrors` を `setError` などでフォームに反映する。パスパラメータ・クエリパラメータの不正（400 `INVALID_PARAMETER`）は主にフロントの実装ミスで発生するため、フォームには反映せず汎用エラーとして表示する。認証切れなどの共通エラーは `lib/services/` 側で処理済みのため、ここでは扱わない。
     - 1ファイル1公開関数(private関数は除く)で実装する
 - *_schemas**
     - Zodなどを使った入力チェック（バリデーション）の定義を置く。
