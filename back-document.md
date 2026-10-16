@@ -669,15 +669,24 @@ DBの区分値（ステータスコードなど）と日本語ラベルを紐付
         - ハンドラーは `GlobalExceptionHandler` に記述する(バリデーション専用のハンドラークラスは作らない)
         - `MethodArgumentNotValidException`(`@Valid`)と `HandlerMethodValidationException`(`@PathVariable`・`@RequestParam`)をそれぞれ `@ExceptionHandler` で処理する
         - `ValidationException` を1回だけ `@ExceptionHandler` で処理する
-        - 戻り値は `ResponseEntity<ValidationErrorResponse>` とする
+        - 戻り値は以下とする
+            - `MethodArgumentNotValidException`・`ValidationException`：`ResponseEntity<ValidationErrorResponse>`
+            - `HandlerMethodValidationException`：`ResponseEntity<ErrorResponse>`(項目別の `errors` は返さない)
     - **ステータス・エラーコード**
-        - `@Valid` 等のバリデーションアノテーションによるエラーは、すべて `400 BAD_REQUEST`・errorCode `VALIDATION_ERROR` で返す(`422` は使用しない)
-        - `message` は固定文言(`入力内容に誤りがあります`)とする
+        - バリデーションアノテーションによるエラーは、すべて `400 BAD_REQUEST` で返す(`422` は使用しない)
+        - `@Valid`(`MethodArgumentNotValidException`)のエラーは、errorCode `VALIDATION_ERROR`・`ValidationErrorResponse` で返す
+            - 運用中も利用者の入力ミスで発生するため、フロントでフォームの項目ごとにエラーを表示できるよう `errors` を返す
+            - `message` は固定文言(`入力内容に誤りがあります`)とする
+        - `@PathVariable`・`@RequestParam`(`HandlerMethodValidationException`)のエラーは、errorCode `INVALID_PARAMETER`・`ErrorResponse` で返す
+            - 主にフロントの実装ミス(不正な値の送信)で発生するため、`@Valid` のエラーと区別し、フロントでは汎用エラーとして表示する
+            - `message` は固定文言(`リクエストパラメータが不正です`)とする
+            - 1つのメソッドで `@PathVariable`・`@RequestParam` のバリデーションと `@Valid` を併用した場合、Springの仕様で `@Valid` 側のエラーも `HandlerMethodValidationException` として投げられ、`INVALID_PARAMETER` で返る(項目別のエラー表示が必要なAPIでは併用しない)
         - `ValidationException` 由来のエラーは、例外が保持する `status`・`errorCode`・`message` を利用する
     - **errorsの設定ルール**
         - key はリクエストのキー名(JSONのキー名)とする。snake_case変換している場合は変換後の名前にする
-        - `@PathVariable`・`@RequestParam` の場合の key はパラメータ名とする
+        - `@PathVariable`・`@RequestParam` の場合(ログ出力用)の key はパラメータ名とする
         - 同じ項目に複数のエラーがある場合は、最初の1件のみ設定する
+        - `HandlerMethodValidationException` はレスポンスに `errors` を含めないが、ログには上記のルールで項目名とメッセージを出力する
         - アノテーションの `message` 属性に日本語のメッセージを必ず指定する(デフォルトメッセージは使用しない)
     - **バリデーションの記述場所**
         - `dto/request` を引数にする場合は、dtoのフィールドにバリデーションアノテーションを付与し、controllerの引数に `@Valid` を付ける
@@ -784,7 +793,9 @@ Controllerには仕様書の記述を直接書かず、この層のアノテー�
     - `@Parameter`：`@PathVariable`・`@RequestParam` がある場合に記述する（`name`・`in`・`description`・`example`）
     - `@ApiResponse`：返しうるステータスコードごとに記述する
         - 成功時：`content` の `schema` と `@ExampleObject` で **レスポンスのJSON例をこのファイルに直接書く**
-        - エラー時：`ErrorResponse`（バリデーションエラーは `ValidationErrorResponse`）を `schema` に指定し、エラーのJSON例を書く
+        - エラー時：`ErrorResponse`（`@Valid` のバリデーションエラーは `ValidationErrorResponse`）を `schema` に指定し、エラーのJSON例を書く
+        - `@PathVariable`・`@RequestParam` のバリデーションエラーは `ErrorResponse`・`INVALID_PARAMETER` で書く
+        - `@Valid` と `@PathVariable`・`@RequestParam` のバリデーションを併用するAPIは、Springの仕様で `@Valid` 側のエラーも `INVALID_PARAMETER` で返るため、400は `ErrorResponse`・`INVALID_PARAMETER` で書く（`VALIDATION_ERROR` は書かない）
         - ステータスコードは「HTTPSTATUS」の表に従う
 
 - **制約**
