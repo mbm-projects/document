@@ -284,9 +284,12 @@ url:
 | 200 / 201 | - | {レスポンスDTO} | {操作}成功 |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | MethodArgumentNotValidException：@Valid のバリデーションエラーの場合。DTOにバリデーションアノテーションを書き、Controllerの引数に @Valid を付ける。messageは日本語で指定する |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
+| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
+
+#### Swagger UIにに記載しないが実装時意識すること
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
+
 
 
 #### アプリ側で自動的に返すステータス（共通で自動。何もしなくてよい）
@@ -343,9 +346,12 @@ url:
 | 200 / 201 | - | {レスポンスDTO} | {操作}成功 |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | MethodArgumentNotValidException：@Valid のバリデーションエラーの場合。DTOにバリデーションアノテーションを書き、Controllerの引数に @Valid を付ける。messageは日本語で指定する |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
+| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
+
+#### Swagger UIにに記載しないが実装時意識すること
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
+
 
 
 #### アプリ側で自動的に返すステータス（共通で自動。何もしなくてよい）
@@ -406,11 +412,15 @@ url:
 | 201 | - | EventCreateResponse | イベント作成成功 |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | `@Valid`のバリデーションエラー |
 | 401 | UNAUTHORIZED | ErrorResponse | 未ログイン・セッション切れ |
-| 403 | FORBIDDEN | ErrorResponse | 権限不足（イベントを作成できる権限がない） |
 | 409 | EVENT_ALREADY_EXISTS | ValidationErrorResponse | 同名のイベントが登録済みの場合 |
 | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | 画像のサイズが上限（5MB）を超えた場合 |
 | 422 | INVALID_IMAGE_FILE | ValidationErrorResponse | 画像の形式が不正な場合 |
 | 500 | INTERNAL_SERVER_ERROR | ErrorResponse | 想定外のエラー |
+
+#### Swagger UIにに記載しないが実装時意識すること
+| 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
+| 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
+
 ````
 
 </details>
@@ -461,9 +471,12 @@ url:
 | --- | --- | --- | --- |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | MethodArgumentNotValidException：@Valid のバリデーションエラーの場合。DTOにバリデーションアノテーションを書き、Controllerの引数に @Valid を付ける。messageは日本語で指定する |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
+| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
+
+#### Swagger UIにに記載しないが実装時意識すること
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
+
 
 ### 気にしないこと（共通で自動、何もしなくてよい）
 
@@ -603,9 +616,12 @@ Swagger UIに必要な項目が出来ている前提。
 | 200 / 201 | - | {レスポンスDTO} | {操作}成功 |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | MethodArgumentNotValidException：@Valid のバリデーションエラーの場合。DTOにバリデーションアノテーションを書き、Controllerの引数に @Valid を付ける。messageは日本語で指定する |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
+| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
+
+#### Swagger UIにに記載しないが実装時意識すること
 | 403 | FORBIDDEN | ErrorResponse | AccessDeniedException：ロール不足・RoleRules 未登録のURLの場合。新しいAPIのURLを RoleRules に登録する（忘れると403になる）。許可するロールの組み合わせも選ぶ |
 | 403 | PERMISSION_DENIED | ErrorResponse | PermissionDeniedException：認可を通った後の業務ルールによる拒否の場合（例：確定済みで編集不可）。拒否する箇所でthrowする |
-| 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
+
 
 
 #### アプリ側で自動的に返すステータス（共通で自動。何もしなくてよい）
