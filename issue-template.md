@@ -283,7 +283,7 @@ url:
 | --- | --- | --- | --- |
 | 200 / 201 | - | {レスポンスDTO} | {操作}成功 |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | MethodArgumentNotValidException：@Valid のバリデーションエラーの場合。DTOにバリデーションアノテーションを書き、Controllerの引数に @Valid を付ける。messageは日本語で指定する |
-| 400 | INVALID_PARAMETER | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
+| 400 | INVALID_PARAMETER | ErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 #### Swagger UIにに記載しないが実装時意識すること
@@ -348,7 +348,7 @@ url:
 | --- | --- | --- | --- |
 | 200 / 201 | - | {レスポンスDTO} | {操作}成功 |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | MethodArgumentNotValidException：@Valid のバリデーションエラーの場合。DTOにバリデーションアノテーションを書き、Controllerの引数に @Valid を付ける。messageは日本語で指定する |
-| 400 | INVALID_PARAMETER | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
+| 400 | INVALID_PARAMETER | ErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 #### Swagger UIにに記載しないが実装時意識すること
@@ -479,7 +479,7 @@ url:
 | HttpStatus | errorCode | レスポンス | 用途 |
 | --- | --- | --- | --- |
 | 400 | VALIDATION_ERROR | ValidationErrorResponse | MethodArgumentNotValidException：@Valid のバリデーションエラーの場合。DTOにバリデーションアノテーションを書き、Controllerの引数に @Valid を付ける。messageは日本語で指定する |
-| 400 | INVALID_PARAMETER | ValidationErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
+| 400 | INVALID_PARAMETER | ErrorResponse | HandlerMethodValidationException：@PathVariable・@RequestParam のバリデーションエラーの場合。引数にバリデーションアノテーションを書く |
 | 413 | PAYLOAD_TOO_LARGE | ErrorResponse | MaxUploadSizeExceededException：アップロードファイルのサイズが上限を超えた場合。自動で413にする |
 
 #### Swagger UIにに記載しないが実装時意識すること
