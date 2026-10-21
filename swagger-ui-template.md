@@ -411,6 +411,7 @@ controllerでは以下のことを行う。
 クラス名の上に以下のアノテーションを追加する
 
 **Tag**
+
 | 属性 | 意味 |
 |---|---|
 | `name` | グループの名前。Swagger UIの見出しになる。**TypeScriptのファイル名としてふさわしいアルファベットにする**(例: `event-overview`) |
@@ -458,12 +459,14 @@ Docでは以下のことを行う。
 - `@Retention(RetentionPolicy.RUNTIME)`:実行時にSwaggerが読み取れるようにする
 
 **Operation**
+
 | 属性 | 意味 |
 |---|---|
 | `summary` | APIの短いタイトル。Swagger UIの一覧に表示される |
 | `description` | APIの詳細な説明。返す内容、nullになる条件、エラーになる条件、権限などを書く |
 
 **Parameter**
+
 | 属性 | 意味 |
 |---|---|
 | `name` | パラメータ名。引数名と一致させる |
@@ -472,6 +475,7 @@ Docでは以下のことを行う。
 | `example` | サンプル値 |
 
 **ApiResponse**
+
 | 属性 | 意味 |
 |---|---|
 | `responseCode` | HTTPステータスコード(`"200"`、`"404"` など) |
@@ -479,6 +483,7 @@ Docでは以下のことを行う。
 | `content` | レスポンスの中身。`@Content` で指定する |
 
 **Content**
+
 | 属性 | 意味 |
 |---|---|
 | `mediaType` | データ形式(`"application/json"` など) |
