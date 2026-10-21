@@ -80,7 +80,9 @@
 
 </details>
 
+
 <details markdown="1">
+    
 <summary>参考コード（Swagger UI用のコード：Controller・DTO・ApiDoc）</summary>
 
 ## controller
@@ -496,7 +498,7 @@ Docでは以下のことを行う。
 
 
 
-<details>
+<details markdown="1">
 <summary>参考コード</summary>
 
 #### doc
