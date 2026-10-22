@@ -585,7 +585,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * イベント概要API
  */
-@Tag(name = "イベント概要", description = "イベントの概要（イベント関連情報・申請全体情報・申請情報管理）に関するAPI")
+@Tag(name = "eventOverview", description = "イベントの概要（イベント関連情報・申請全体情報・申請情報管理）に関するAPI")
 @RestController
 @RequestMapping("/api/events/{eventId}/overview")
 @RequiredArgsConstructor
