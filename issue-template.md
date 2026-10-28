@@ -574,9 +574,11 @@ Swagger UIに必要な項目が出来ている前提。
 
 ### 4. Controllerに追記する
 
-### 5. Swagger UIで動作確認する
+### 5. RoleRules.javaに追記する
 
-### 6. 親Issueに自作例外の内容を追記する
+### 6. Swagger UIで動作確認する
+
+### 7. 親Issueに自作例外の内容を追記する
 
 ## 完了条件
 
@@ -663,9 +665,11 @@ Swagger UIに必要な項目が出来ている前提。
 
 ### 4. Controllerに追記する
 
-### 5. Swagger UIで動作確認する
+### 5. RoleRules.javaに追記する
 
-### 6. 親Issueに自作例外の内容を追記する
+### 6. Swagger UIで動作確認する
+
+### 7. 親Issueに自作例外の内容を追記する
 
 ## 完了条件
 - [ ] 
@@ -721,6 +725,9 @@ Swagger UIに必要な項目が出来ている前提。
 
 ### 4. Controllerに追記する
 作成済みの`EventController`に、`EventService`の呼び出しを追記する。
+
+### 5. RoleRules.javaに追記する
+GET /api/events/{eventId}/studentsを、管理者のみ許可するルールに追記する。
 
 ### 5. Swagger UIで動作確認する
 正常系と各エラーステータスが想定通り返ることを確認する。
