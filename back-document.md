@@ -227,6 +227,7 @@ public class UserResponse {
     - バリデーションは `dto/request` パッケージが引数の場合はdtoに、その他の引数の場合は `controller/api` 内に記述
     - `entity` パッケージをそのまま戻り値・引数として使用しない
     - `dto/db` は戻り値・引数では使用しない(`dto/request`, `dto/response` に詰めなおす)
+    - 認可が必要な管理ページは`api/manege/`に認可不要なデジタルパンフレット関連のページは`api/pamphlet/`に配置する
 
 ---
 
