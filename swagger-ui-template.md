@@ -547,6 +547,12 @@ public class EventOverviewApiDoc {
         - eventId が1未満の場合は400を返す
         - 存在しないイベントの場合は404を返す
         - ログイン済みの管理者のみ実行できる
+
+        【実装場所】（org.example.app 配下）
+
+        Controller：controller/api/AuthController#login
+        Request：dto/request/LoginRequest
+        Response：dto/response/LoginResponse
         """)
     @Parameter(name = "eventId", in = ParameterIn.PATH, description = "イベントID", example = "1")
     @ApiResponse(responseCode = "200", description = "取得成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = EventOverviewResponse.class)))
