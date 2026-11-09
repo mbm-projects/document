@@ -11,6 +11,7 @@ my-app/
 │
 ├── src/
 │   ├── api/
+│   │   ├── fetcher.ts
 │   │   └── openapi/
 │   │       └── generated/
 │   │           ├── index.ts
@@ -80,9 +81,9 @@ my-app/
 │   │   ├── hooks/
 │   │   │   └── useDebounce.ts
 │   │   ├── services/
-│   │   │   ├── apiError.ts
-│   │   │   ├── handleCommonErrorServer.ts
-│   │   │   └── handleCommonErrorClient.ts
+│   │   │   ├── handleApiError.ts
+│   │   │   ├── getFieldErrors.ts
+│   │   │   └── applyFieldErrors.ts
 │   │   ├── utils/
 │   │   │   └── formatDate.ts
 │   │   └── doc/
@@ -105,7 +106,7 @@ my-app/
 
 | ディレクトリ | 役割・説明 |
 | --- | --- |
-| **`/api`** | 外部APIサーバーとの連携に関するものを配置する層。配下に `openapi/`（自動生成物）を持つ。 |
+| **`/api`** | 外部APIサーバーとの連携に関するものを配置する層。配下に `openapi/`（自動生成物）と、生成関数が使う共通fetch（`fetcher.ts`）を持つ。 |
 | **`/app`** | 画面（Page）やWebブラウザからのリクエストを受け付け、レスポンス（HTML）を返却するコントローラー兼ルーティング層。 |
 | **`/components`** | 複数のページをまたいで共通で利用する、ボタンや入力欄などのUIパーツ（見た目）・レイアウトを配置・管理する層。 |
 | **`/lib`** | アプリケーション全体の共通ロジックや、日付操作・文字列加工など、画面から切り離された共通の裏方処理（関数群）を隠蔽する層。 |
@@ -127,6 +128,7 @@ my-app/
 | **`openapi/generated/index.ts`** | 配下の各タグ別ディレクトリ・共通モデルの内容を re-export する自動生成ファイル。利用側はこの `index.ts` 経由で参照できる。 |
 | **`openapi/generated/model/`** | `output.schemas` で指定したスキーマ型の出力先。参照しているタグ数に関わらず、リクエスト/レスポンスのスキーマ型はすべてここにフラットに生成される（`{tag}/{tag}.ts` 側にはAPI通信関数のみが生成される）。 |
 | **`openapi/generated/{tag}/{tag}.ts`** | Orvalが `@Tag`（Controller単位）ごとに分割生成する、APIのリクエスト/レスポンス型・URL生成関数（`getXxxUrl`）・`fetch` 実行までを含むAPI通信関数 |
+| **`fetcher.ts`** | Orval生成のAPI通信関数が使う共通のfetch（`customFetch`）。ベースURLの付与、レスポンスの整形、通信失敗時の `status: 0` 化を行う。手書きのファイルで、Orvalの `override.mutator` から参照する。 |
 
 #### 運用ルール
 
@@ -137,8 +139,10 @@ my-app/
 - Spring側で「同じ意味のデータ（Userなど）は同一DTOクラスを使い回す」設計にしておくことで、同じ構造の型が別名で重複生成されるのを防ぐ。
 - Spring側のController / DTOを変更した場合は、必ず再生成コマンドを実行し、差分をコミットする。
 - ファイル冒頭の自動生成コメント（Orvalが自動付与）を削除しない。
-- 生成されたAPI通信関数は戻り値として `{ data, status, headers }` を返し、**HTTPエラー時も例外はthrowされない**。ただしネットワーク断など `fetch` 自体が失敗した場合は例外がthrowされるため、`_services` ではステータス判定と例外捕捉の両方を行う。
-- ステータス判定とエラー制御は必ず `_services` 側で行う。うち全画面共通のエラー（認証切れなど）は `src/lib/services/` の共通ハンドラを経由する。
+- Orvalの `override.mutator` に `src/api/fetcher.ts` の `customFetch` を指定し、生成関数の `fetch` を `customFetch` 経由にする（設定は「付録：Orval設定」を参照）。
+- `customFetch` はベースURLの付与とレスポンスの整形（`{ data, status, headers }`）を行う。**通信に失敗した場合（ネットワーク断など）や、応答をJSONとして読めなかった場合は、例外をthrowせず `status: 0` で返す**。
+- 生成されたAPI通信関数は戻り値として `{ data, status, headers }` を返し、**HTTPエラー時も通信失敗時も例外はthrowされない**。そのため `_services` では `try/catch` を書かず、戻り値の `status` で判定する。
+- ステータス判定とエラー制御は `_services` 側で行う。うち全画面共通のエラー（認証切れなど）は `src/lib/services/` の `handleApiError` に渡して処理する。
 - APIレスポンスのランタイム検証はフロントエンドでは行わない。OpenAPIスキーマとバックエンド実装の齟齬はバックエンド側のテストで担保する。
 - `openapi/generated/` 配下のファイルを **他ディレクトリへ手動コピーすることは禁止**。利用する場合は必ず `import` する。
 - `openapi/generated/` 配下の**API通信関数**（`getUser` など）を `_services` 以外のファイル（`page.tsx`, `_components`, `_hooks` など）から**直接importすることは禁止**する。必ず `_services` を経由する。
@@ -221,43 +225,41 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
 - *_services**
     - APIサーバーに対して、データの取得（GET）や送信（POST/PUT等）を行う通信処理のみを定義する。
     - **通信処理そのものは自前で `fetch` を書かず、`openapi/generated` が生成したAPI通信関数を呼び出す**。`_services` はその薄いラッパーとして、ステータス判定・エラー制御・呼び出し側に返す形への整形のみを担う。
-    - Orval生成関数はHTTPエラー時に例外をthrowしないため、**`_services` で必ずステータスを判定し、異常時はthrowする**。throwするエラーは `src/lib/services/` の `ApiError` に統一する。
+    - 生成関数はHTTPエラー時も通信失敗時も例外をthrowしない（通信失敗は `customFetch` が `status: 0` で返す）ため、**`_services` では `try/catch` を書かず、戻り値の `status` で判定する**。
     - **エラー処理の責務分担**
-        - 全画面で対応が同じエラー（認証切れ・権限なし・サーバ障害・ネットワーク断）は自前で書かず、`src/lib/services/` の共通ハンドラを呼び出して処理させる。
-        - それ以外の、画面ごとに文言や挙動が変わるエラー（404の未存在、400のバリデーション、409の競合、業務エラーなど）は各 `_services` 内で個別に判定してthrowする。
-        - 実装順序は「共通ハンドラを先に通し、その後で個別判定」とする。
-    - 共通ハンドラは内部で `redirect()` を使う場合があり、これは例外機構で実現されている。共通ハンドラの呼び出しを `try/catch` で囲むと遷移が中断されるため囲まないこと。
-    - **サーバーサイドとクライアントサイドでエラーの伝わり方が異なる**ため、以下の制約に従う。
-        - Server Component から外へ抜けた例外は、Next.jsが `error.tsx`（Client Component）へ渡す境界でオブジェクトを作り直す。production ビルドでは `message` が汎用文字列へ差し替えられ、`status` や `fieldErrors` といった独自プロパティはすべて剥がされる（情報漏洩防止のための仕様）。**`error.tsx` 側で `error.status` を読むことはできない。**
-        - この差し替えは `next dev` では行われないため、開発中は動いているように見える。必ず `next build && next start` で確認する。
-        - したがって、**サーバーサイドの `_services` ではステータスに応じた画面の作り分けを行わない**。データが存在しない場合（404）は `ApiError` をthrowせず Next.js の `notFound()` を呼び、`not-found.tsx` に処理を任せる。それ以外の異常は `ApiError` をthrowし、`error.tsx` の汎用エラー画面で受ける。
-        - `error.tsx` でどうしてもステータス単位の分岐が必要な場合は、越境しても保持される `digest` フィールドのみを利用する。`digest` は文字列前提のため、`fieldErrors` のような構造化データは運べない。
-        - **ステータスに応じた詳細な分岐（400のフィールドエラー表示、409の競合メッセージなど）はクライアントサイドでのみ行う。** クライアント側は同一ランタイム内で例外が伝わるため、`ApiError` のプロパティはそのまま `_hooks` の catch で参照できる。
+        - 画面ごとに文言や挙動を変えたいエラー（404の未存在、409の競合、業務エラーなど）は、各 `_services` で個別に判定する。
+        - それ以外は `handleApiError` に渡す。`handleApiError` は、400 `VALIDATION_ERROR` のみ項目別エラー（`fieldErrors`）を戻り値で返し、401・403 は専用の遷移を行い、**それ以外（404・409・5xx・通信失敗など）はすべて「予期せぬエラー」としてエラー画面へ遷移する**。
+        - 実装順序は「個別に扱うステータスを先に判定し、残りを `handleApiError` に渡す」とする。`handleApiError` は対象外のステータスでも遷移して処理を打ち切るため、先に呼ぶと個別判定が行われない。
+    - `handleApiError` は内部で `redirect()` を使い、これは例外機構で実現されている。`handleApiError` の呼び出しを `try/catch` で囲むと遷移が中断されるため囲まないこと。
+    - **バックエンドとの通信は、サーバー側（Server Component、Server Action）でのみ行う**。クライアントからの操作（フォーム送信など）は Server Action（`'use server'`）を経由し、クライアントコンポーネントや `_hooks` から生成関数を直接呼ばない。
+    - **Server Action で例外をthrowしても、クライアントには `status` や `fieldErrors` が届かない**。production ビルドでは `message` が汎用文字列に差し替えられ、独自プロパティは剥がされる（情報漏洩防止のための仕様）。この差し替えは `next dev` では行われないため、必ず `next build && next start` で確認する。画面に伝えたい内容（項目別エラーなど）は、throwせず**戻り値で返す**。
     - 通信と最低限のエラー制御のみを行い、画面にまつわる状態（State）はここでは一切扱わない。
     - サーバサイドでのみAPIサーバーからデータを取得するファイルには必ず`'server-only'` を記述する
     - サーバサイドで実行するファイルは○○Server.ts、クライアントサイドで実行するファイルは○○Client.tsとする
     - 1ファイル1公開関数(private関数は除く)で実装する
     
     **エラー処理の責務対応表**
-    
-    | ステータス / 事象 | 処理場所 | サーバーサイドでの挙動 | クライアントサイドでの挙動 |
-    | --- | --- | --- | --- |
-    | 401 認証切れ | `lib/services/`（共通） | `redirect()` でログイン画面へ | `window.location` でログイン画面へ |
-    | 403 権限なし | `lib/services/`（共通） | `ApiError` をthrow → `error.tsx` の汎用表示 | `ApiError` をthrow → `_hooks` でトースト表示等 |
-    | 5xx サーバ障害 | `lib/services/`（共通） | `ApiError` をthrow → `error.tsx` の汎用表示 | `ApiError` をthrow → `_hooks` でトースト表示等 |
-    | ネットワーク断 | `lib/services/`（共通） | `ApiError(status: 0)` をthrow | `ApiError(status: 0)` をthrow |
-    | 404 未存在 | 各 `_services` | **`notFound()`** を呼び `not-found.tsx` に任せる | `ApiError` をthrow → `_hooks` で表示 |
-    | 400 バリデーション（`VALIDATION_ERROR`） | 各 `_services` | 発生しない（サーバー側は参照系のみ） | `fieldErrors` を詰めてthrow → `_hooks` で `setError` |
-    | 400 パラメータ不正（`INVALID_PARAMETER`） | 各 `_services` | `ApiError` をthrow → `error.tsx` の汎用表示 | `fieldErrors` は反映せず `ApiError` をthrow → `_hooks` でトースト表示等（汎用エラー） |
-    | 409 競合・業務エラー | 各 `_services` | `ApiError` をthrow → `error.tsx` の汎用表示 | `ApiError` をthrow → `_hooks` で文言表示 |
-    
-    ※ サーバーサイドでは `status` が `error.tsx` まで届かないため、404 以外はすべて汎用エラー画面となる。ステータスごとの文言の出し分けが要件にある画面は、クライアントサイドで取得する設計にする。
+
+    | ステータス / 事象 | 処理場所 | 挙動 |
+    | --- | --- | --- |
+    | 2xx | - | 正常。`handleApiError` は `undefined` を返す |
+    | 400 バリデーション（`VALIDATION_ERROR`） | `handleApiError` | 遷移せず `fieldErrors` を戻り値で返す → `_hooks` で `applyFieldErrors` により各項目にエラーをセットする |
+    | 401 認証切れ | `handleApiError` | `redirect()` でログイン画面（`ROUTES.LOGIN`）へ |
+    | 403 権限なし | `handleApiError` | `redirect()` でエラー画面（`ROUTES.ERROR`）へ（`title`・`message` を渡す） |
+    | 上記以外（404・409・5xx、400 `INVALID_PARAMETER` など） | `handleApiError` | 「予期せぬエラー」としてエラー画面へ `redirect()` |
+    | ネットワーク断・応答の解析失敗 | `customFetch` → `handleApiError` | `customFetch` が `status: 0` で返し、上記以外と同じく「予期せぬエラー」としてエラー画面へ |
+    | 画面ごとに扱いを変えたいエラー（404の未存在、409の競合など） | 各 `_services` | `handleApiError` を呼ぶ前に判定し、戻り値で `_hooks` に伝える |
+
+    ※ 通信失敗や予期せぬエラーではエラー画面へ遷移するため、フォームの入力内容は失われる。
+    ※ 画面ごとの文言の出し分けが要件にあるエラーだけを、各 `_services` で個別に判定する。
     
 - *_hooks**
     - ページ内カスタムフックス(useState・useEffect・useForm等)などの定義行う
     - ボタンを押したときのアクションや読み込み中（Loading）の判定など、コンポーネントから「動作の仕組み」を引き剥がして一括管理する。
     - APIへのデータ送信を伴うフォームは、`useForm` をこの `_hooks/` 内で定義する
-    - サーバー側のバリデーションエラー（400 `VALIDATION_ERROR`）は `_services` からthrowされた `ApiError` をここで受け、その `fieldErrors` を `setError` などでフォームに反映する。パスパラメータ・クエリパラメータの不正（400 `INVALID_PARAMETER`）は主にフロントの実装ミスで発生するため、フォームには反映せず汎用エラーとして表示する。認証切れなどの共通エラーは `lib/services/` 側で処理済みのため、ここでは扱わない。
+    - サーバー側のバリデーションエラー（400 `VALIDATION_ERROR`）は、`_services`（Server Action）が戻り値で返した `fieldErrors` を受け取り、`applyFieldErrors` でフォームの各項目に反映する。`_hooks` に `try/catch` は不要。
+    - `_services` が個別判定の結果として返したエラー（409の競合など）は、`setError('root', ...)` などでフォーム全体のエラーとして表示する。
+    - 認証切れ・権限なし・予期せぬエラーは `handleApiError` が遷移まで行うため、ここでは扱わない。
     - 1ファイル1公開関数(private関数は除く)で実装する
 - *_schemas**
     - Zodなどを使った入力チェック（バリデーション）の定義を置く。
@@ -280,14 +282,15 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
 - バリデーションチェックはzodライブラリを利用する（スキーマはAPIのスキーマから生成せず `_schemas` で自前定義する）
 - サブディレクトリにはディレクトリ名の前に`_`をつける
 - `src/api/openapi/generated/` 配下のファイルは自動生成物であり、手動編集・手動コピーを禁止する。利用する場合は、API通信関数は必ず `_services` を経由し、型は必ず `_types` / `/types/` を経由してimportする
-- 全画面共通のエラー処理は `src/lib/services/` に集約し、画面固有のエラー処理は各 `_services` で行う
+- 全画面共通のエラー処理は `src/lib/services/` の `handleApiError` に集約し、画面固有のエラー処理は各 `_services` で行う
 - APIサーバ通信の流れ
-    - サーバーサイド
-    page.tsx (Server Component) ───> _services ───> openapi/generated (Orval生成関数)
-    - クライアントサイドで動的読み込み
-    _components (Client UI) ──> _hooks ────> _services ───> openapi/generated (Orval生成関数)
+    - サーバーサイド（データ取得）
+    page.tsx (Server Component) ───> _services ───> openapi/generated (Orval生成関数) ───> api/fetcher.ts (customFetch)
+    - クライアントからの操作（フォーム送信など）は Server Action 経由
+    _components (Client UI) ──> _hooks ────> _services (Server Action) ───> openapi/generated (Orval生成関数) ───> api/fetcher.ts (customFetch)
     - 共通エラー処理
-    _services ───> lib/services (共通ハンドラ)
+    _services ───> lib/services (handleApiError)
+- バックエンドとの通信はサーバー側（Server Component / Server Action）でのみ行う。クライアントコンポーネントや `_hooks` から生成関数を直接呼ばない
 - サーバサイドコンポーネントでは`useEffect` は使用せず直接非同期でフェッチする
 
 ---
@@ -322,19 +325,14 @@ Server Component のままにする。
     - ページやドメイン固有の状態（フィルタ条件、フォームの入力値など）はここに置かず `_hooks/` へ。
     - 1ファイル1公開関数(private関数は除く)で実装する
 - **services/**
-    - fetchの共通設定（baseURL、共通ヘッダー、タイムアウト）や、複数ページで使い回すAPI通信処理を置く。
-    - **全画面で同一の挙動をとるエラーの処理をここで一元的に定義する**。
-    具体的には認証切れ（401）、権限なし（403）、サーバ障害（5xx）、ネットワーク断など、
-    どの画面から呼ばれても対応が変わらないものを対象とする。
-    - アプリ共通のエラー型 `ApiError`（`status` / `message` / `fieldErrors` を保持）を定義し、
-    `_services` からthrowするエラーはすべてこの型に統一する。
-    これにより `_hooks` や `error.tsx` 側でステータスに応じた分岐が可能になる。
-    - 共通ハンドラは、対象ステータスであれば redirect または throw して処理を打ち切り、
-    対象外であれば何もせず返す。個別のステータス判定は呼び出し側の `_services` に委ねる。
-    - サーバー用は `○○Server.ts`、クライアント用は `○○Client.ts` と命名する（`_services` と同じ命名規則）。
-    認証切れ時の遷移方法がサーバー（`redirect`）とクライアント（画面リロードを伴う遷移）で異なるため、
-    共通ハンドラも両者を分けて実装する。
-    - 1ファイル1公開関数(private関数は除く)で実装する。ただしエラー型（クラス）の定義ファイルはこの限りではない。
+    - fetchの共通設定（baseURL）は `src/api/fetcher.ts`（`customFetch`）に置く。ここには、複数ページで使い回すAPI通信処理と、エラー処理の共通関数を置く。
+    - **全画面で同一の挙動をとるエラーの処理を `handleApiError` で一元的に定義する**。
+    具体的には認証切れ（401）、権限なし（403）、それ以外のエラー（予期せぬエラー）を対象とする。
+    - `handleApiError` はサーバー専用（`'server-only'`）で、Server Action / Server Component から呼ぶ。
+    - `handleApiError` は、対象のステータスであれば `redirect` して処理を打ち切り、400 `VALIDATION_ERROR` のみ項目別エラー（`fieldErrors`）を戻り値で返す。
+    個別に扱うステータスは、呼び出し側の `_services` が `handleApiError` を呼ぶ前に判定する。
+    - 項目別エラーの取り出し（`getFieldErrors`）と、フォームへの反映（`applyFieldErrors`）もここに置く。
+    - 1ファイル1公開関数(private関数は除く)で実装する。
 - **utils/**
     - `formatDate` のように、入力に対して決まった値を返すだけの純粋関数のみを置く。
     - ページ固有の加工処理は置かず `_utils/` へ。
@@ -389,6 +387,13 @@ export default defineConfig({
       indexFiles: true,
       // 削除されたエンドポイントのファイルが残らないよう生成前にクリーンする
       clean: true,
+      // 生成関数の fetch を customFetch 経由にする（ベースURLの付与、通信失敗の status: 0 化）
+      override: {
+        mutator: {
+          path: './src/api/fetcher.ts',
+          name: 'customFetch',
+        },
+      },
     },
   },
 });
@@ -414,238 +419,59 @@ export const getUser = async (
 ): Promise<getUserResponse> => { /* fetch実行 */ };
 ```
 
-### lib/services（共通エラー型と共通ハンドラ）
+### api/fetcher.ts（customFetch）
+
+Orval 生成関数が共通で通る fetch。実装はアプリ側の `src/api/fetcher.ts` を参照する。ここでは役割だけを示す。
+
+- ベースURLを付与して `fetch` を実行し、レスポンスを `{ data, status, headers }` の形で返す。
+- 通信に失敗した場合（ネットワーク断など）や、応答をJSONとして読めなかった場合は、例外をthrowせず `status: 0` で返す。
+- `status: 0` は `handleApiError` で「予期せぬエラー」として扱われ、エラー画面へ遷移する。
+
+### lib/services（handleApiError）
+
+APIのレスポンスを共通で処理するサーバー専用の関数。実装はアプリ側の `src/lib/services/handleApiError.ts` を参照する。
+
+| 引数 | 戻り値 |
+| --- | --- |
+| 生成関数のレスポンス（`status`・`data`） | 400 `VALIDATION_ERROR` のときだけ項目別エラー（`Record<string, string>`）。2xx のときは `undefined`。それ以外は遷移して戻らない |
+
+- 遷移先のURLは `ROUTES`（`constants/routes.ts`）で定義する。
+- `redirect()` を内部で使うため、呼び出しを `try/catch` で囲まない。
+
+### _services・_hooks の呼び出し方
+
+Server Component（データ取得）
 
 ```tsx
-// src/lib/services/apiError.ts
-export class ApiError extends Error {
-  constructor(
-    readonly status: number, // 0 はネットワークエラーを表す
-    message: string,
-    readonly fieldErrors?: Record<string, string>,
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
+const res = await getSampleItems();
+handleApiError(res); // 401・403・その他のエラーは遷移まで行う
+return res.data;
+```
+
+Server Action（フォーム送信）
+
+```tsx
+const res = await updateSampleItem(id, body);
+
+// 個別に扱うステータスは、handleApiError より先に判定する
+if (res.status === 409) return { conflict: true };
+
+// 400 VALIDATION_ERROR のときだけ fieldErrors が返る
+const fieldErrors = handleApiError(res);
+return { fieldErrors };
+```
+
+_hooks（戻り値でフォームにエラーを反映）
+
+```tsx
+const result = await putSampleItem(id, toRequest(values));
+if (result.fieldErrors) {
+  applyFieldErrors(form, result.fieldErrors);
+  return;
 }
 ```
 
-```tsx
-// src/lib/services/handleCommonErrorServer.ts
-import 'server-only';
-import { redirect } from 'next/navigation';
-import { ROUTES } from '@/constants/routes';
-import { ApiError } from './apiError';
-
-/**
- * 全画面共通のエラーを処理する。
- * 対象ステータスの場合は redirect または throw するため後続処理には進まない。
- * 対象外の場合は何もせず返るので、個別判定は呼び出し側の _services で行う。
- */
-export const handleCommonErrorServer = (status: number): void => {
-  if (status === 401) {
-    redirect(ROUTES.LOGIN); // 内部で例外をthrowするため try/catch で囲まないこと
-  }
-  if (status === 403) {
-    throw new ApiError(403, 'この操作を行う権限がありません');
-  }
-  if (status >= 500) {
-    throw new ApiError(status, 'サーバーで問題が発生しました');
-  }
-};
-```
-
-```tsx
-// src/lib/services/handleCommonErrorClient.ts
-import { ROUTES } from '@/constants/routes';
-import { ApiError } from './apiError';
-
-export const handleCommonErrorClient = (status: number): void => {
-  if (status === 401) {
-    // 保持している状態を破棄するため、ルーター遷移ではなく画面遷移させる
-    window.location.href = ROUTES.LOGIN;
-    throw new ApiError(401, '認証の有効期限が切れました');
-  }
-  if (status === 403) {
-    throw new ApiError(403, 'この操作を行う権限がありません');
-  }
-  if (status >= 500) {
-    throw new ApiError(status, 'サーバーで問題が発生しました');
-  }
-};
-```
-
-### _services（Orval生成関数の呼び出し）
-
-```tsx
-// _lib/_services/getSampleItemsServer.ts
-import 'server-only';
-import { getSampleItems } from '@/api/openapi/generated';
-import { ApiError } from '@/lib/services/apiError';
-import { handleCommonErrorServer } from '@/lib/services/handleCommonErrorServer';
-import type { SampleItem } from '../../_types';
-
-export const fetchSampleItems = async (): Promise<SampleItem[]> => {
-  // fetch 自体の失敗（ネットワーク断など）は例外でthrowされるため捕捉する
-  const res = await getSampleItems().catch(() => {
-    throw new ApiError(0, '通信に失敗しました。時間をおいて再度お試しください');
-  });
-
-  // 認証切れ・権限・サーバ障害など、全画面共通のエラーを先に処理させる
-  handleCommonErrorServer(res.status);
-
-  // ここから下はこの画面固有のエラー判定
-  if (res.status !== 200) {
-    throw new ApiError(res.status, '一覧の取得に失敗しました');
-  }
-  return res.data;
-};
-```
-
-### _services（サーバーサイド：404 は notFound() を使う）
-
-```tsx
-// _lib/_services/getSampleItemServer.ts
-import 'server-only';
-import { notFound } from 'next/navigation';
-import { getSampleItem } from '@/api/openapi/generated';
-import { ApiError } from '@/lib/services/apiError';
-import { handleCommonErrorServer } from '@/lib/services/handleCommonErrorServer';
-import type { SampleItem } from '../../_types';
-
-export const fetchSampleItem = async (id: number): Promise<SampleItem> => {
-  const res = await getSampleItem(id).catch(() => {
-    throw new ApiError(0, '通信に失敗しました。時間をおいて再度お試しください');
-  });
-
-  handleCommonErrorServer(res.status);
-
-  // 404 は ApiError をthrowせず notFound() を呼ぶ。
-  // ApiError の status は error.tsx まで届かないため、Next.js の仕組みに任せる。
-  if (res.status === 404) {
-    notFound(); // 内部で例外をthrowするため try/catch で囲まないこと
-  }
-
-  if (res.status !== 200) {
-    // ここに来た場合 error.tsx では汎用エラー画面が表示される（status は届かない）
-    throw new ApiError(res.status, '情報の取得に失敗しました');
-  }
-  return res.data;
-};
-```
-
-### _services（クライアントサイド：status に応じた分岐が可能）
-
-```tsx
-// _lib/_services/updateSampleItemClient.ts
-import { updateSampleItem } from '@/api/openapi/generated';
-import { ApiError } from '@/lib/services/apiError';
-import { handleCommonErrorClient } from '@/lib/services/handleCommonErrorClient';
-import type { SampleItem, SampleItemRequest } from '../../_types';
-
-export const putSampleItem = async (
-  id: number,
-  body: SampleItemRequest,
-): Promise<SampleItem> => {
-  const res = await updateSampleItem(id, body).catch(() => {
-    throw new ApiError(0, '通信に失敗しました。時間をおいて再度お試しください');
-  });
-
-  handleCommonErrorClient(res.status);
-
-  // クライアントサイドは同一ランタイム内で例外が伝わるため、
-  // status / fieldErrors がそのまま _hooks の catch で参照できる
-  if (res.status === 400) {
-    throw new ApiError(400, '入力内容に誤りがあります', res.data.fieldErrors);
-  }
-  if (res.status === 404) {
-    throw new ApiError(404, '対象のデータが見つかりませんでした');
-  }
-  if (res.status === 409) {
-    throw new ApiError(409, '他のユーザーによって更新されています。再読み込みしてください');
-  }
-  if (res.status !== 200) {
-    throw new ApiError(res.status, '更新に失敗しました');
-  }
-  return res.data;
-};
-```
-
-### _hooks（クライアント側での status 分岐）
-
-```tsx
-// _lib/_hooks/useSampleForm.ts
-'use client';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ApiError } from '@/lib/services/apiError';
-import { putSampleItem } from '../_services/updateSampleItemClient';
-import { sampleFormSchema, type SampleFormValues } from '../_schemas/formSchema';
-
-export const useSampleForm = (id: number) => {
-  const form = useForm<SampleFormValues>({
-    resolver: zodResolver(sampleFormSchema),
-  });
-
-  const onSubmit = form.handleSubmit(async (values) => {
-    try {
-      await putSampleItem(id, toRequest(values));
-    } catch (e) {
-      if (!(e instanceof ApiError)) throw e;
-
-      // 401 は共通ハンドラが画面遷移を開始済み。遷移中に不要な表示を出さない
-      if (e.status === 401) return;
-
-      // 400 はフィールド単位でフォームへ反映する
-      if (e.status === 400 && e.fieldErrors) {
-        Object.entries(e.fieldErrors).forEach(([name, message]) => {
-          form.setError(name as keyof SampleFormValues, { message });
-        });
-        return;
-      }
-
-      // それ以外はフォーム全体のエラーとして表示する
-      form.setError('root', { message: e.message });
-    }
-  });
-
-  return { form, onSubmit };
-};
-```
-
-### error.tsx / not-found.tsx（サーバーサイドの受け皿）
-
-```tsx
-// app/sample/[id]/not-found.tsx
-// サーバーサイドの _services が notFound() を呼んだ場合に表示される
-export default function NotFound() {
-  return <p>お探しのデータは見つかりませんでした。</p>;
-}
-```
-
-```tsx
-// app/sample/[id]/error.tsx
-'use client';
-
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  // 注意：production では error.message は汎用文字列に差し替えられ、
-  // ApiError の status / fieldErrors は剥がされているため参照できない。
-  // ステータス単位の分岐が必要な場合は digest のみが利用可能。
-  return (
-    <div>
-      <p>問題が発生しました。時間をおいて再度お試しください。</p>
-      {error.digest && <p>エラーID: {error.digest}</p>}
-      <button onClick={reset}>再読み込み</button>
-    </div>
-  );
-}
-```
+※ 生成型の都合で `handleApiError` の引数に型の変換が必要な場合は、アプリ側の実装に合わせる。
 
 ### _schemas（フォーム用スキーマの自前定義）
 
@@ -687,10 +513,10 @@ export type SignupFormValues = z.infer<typeof signupFormSchema>;
 | **関数 / 変数** | ローワーキャメルケース | `fetchSampleItems`, `userId`, `totalPrice` |
 | **定数** | 大文字スネークケース | `MAX_RETRY_COUNT`, `DEFAULT_PAGE_SIZE` |
 | **定数オブジェクト** | 大文字スネークケース（キーも大文字） | `ROUTES.LOGIN`, `STATUS.ACTIVE` |
-| **型 / インターフェース** | アッパーキャメルケース | `SampleItem`, `User`, `ApiError` |
+| **型 / インターフェース** | アッパーキャメルケース | `SampleItem`, `User` |
 | **Props の型** | コンポーネント名 + `Props` | `SampleFormProps`, `DataCardProps` |
 | **カスタムフック** | `use` + アッパーキャメルケース | `useSampleData`, `useDebounce` |
-| **クラス** | アッパーキャメルケース | `ApiError` |
+| **クラス** | アッパーキャメルケース | `SampleService` |
 | **boolean 変数** | `is` / `has` / `can` / `should` を接頭辞にする | `isLoading`, `hasError`, `canSubmit` |
 | **イベントハンドラ（実装側）** | `handle` + 対象 + 動作 | `handleSubmit`, `handleNameChange` |
 | **イベントハンドラ（Props側）** | `on` + 対象 + 動作 | `onSubmit`, `onNameChange` |
