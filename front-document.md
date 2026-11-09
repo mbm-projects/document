@@ -421,179 +421,57 @@ export const getUser = async (
 
 ### api/fetcher.ts（customFetch）
 
-```tsx
-// src/api/fetcher.ts
-const getBaseUrl = (): string => {
-  const baseUrl =
-    typeof window === 'undefined' ? process.env.API_BASE_URL : process.env.NEXT_PUBLIC_API_BASE_URL;
-  return (baseUrl ?? '').replace(/\/$/, '');
-};
+Orval 生成関数が共通で通る fetch。実装はアプリ側の `src/api/fetcher.ts` を参照する。ここでは役割だけを示す。
 
-/**
- * Orval 生成関数が使う共通の fetch。
- * 通信に失敗した場合（ネットワーク断など）や、応答を JSON として読めなかった場合は、
- * 例外をthrowせず status: 0 のレスポンスを返す。
- * status: 0 は handleApiError で「予期せぬエラー」として扱われ、エラー画面へ遷移する。
- */
-export const customFetch = async <T>(url: string, options: RequestInit): Promise<T> => {
-  try {
-    const res = await fetch(`${getBaseUrl()}${url}`, options);
+- ベースURLを付与して `fetch` を実行し、レスポンスを `{ data, status, headers }` の形で返す。
+- 通信に失敗した場合（ネットワーク断など）や、応答をJSONとして読めなかった場合は、例外をthrowせず `status: 0` で返す。
+- `status: 0` は `handleApiError` で「予期せぬエラー」として扱われ、エラー画面へ遷移する。
 
-    const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-    const data: unknown = body ? JSON.parse(body) : {};
+### lib/services（handleApiError）
 
-    return { data, status: res.status, headers: res.headers } as T;
-  } catch {
-    return { data: {}, status: 0, headers: new Headers() } as T;
-  }
-};
-```
+APIのレスポンスを共通で処理するサーバー専用の関数。実装はアプリ側の `src/lib/services/handleApiError.ts` を参照する。
 
-### lib/services（共通エラーハンドラ）
+| 引数 | 戻り値 |
+| --- | --- |
+| 生成関数のレスポンス（`status`・`data`） | 400 `VALIDATION_ERROR` のときだけ項目別エラー（`Record<string, string>`）。2xx のときは `undefined`。それ以外は遷移して戻らない |
+
+- 遷移先のURLは `ROUTES`（`constants/routes.ts`）で定義する。
+- `redirect()` を内部で使うため、呼び出しを `try/catch` で囲まない。
+
+### _services・_hooks の呼び出し方
+
+Server Component（データ取得）
 
 ```tsx
-// src/lib/services/handleApiError.ts
-import 'server-only';
-import { redirect } from 'next/navigation';
-import { ROUTES } from '@/constants/routes';
-import { getFieldErrors } from './getFieldErrors';
-
-type ErrorRes = {
-  status: number;
-  data: { errorCode?: string; errors?: Record<string, string> };
-};
-
-/**
- * APIのレスポンスを共通で処理する。
- * - 2xx: undefined を返す
- * - 400 VALIDATION_ERROR: 遷移せず fieldErrors を返す
- * - 401: ログイン画面へ遷移
- * - 403: エラー画面へ title・message 付きで遷移
- * - その他（404・409・5xx、通信失敗の status 0 など）: 「予期せぬエラー」としてエラー画面へ遷移
- *
- * 個別に扱うステータスは、この関数を呼ぶ前に _services で判定する。
- * redirect() は例外を投げて遷移するため、この関数の呼び出しを try/catch で囲まないこと。
- */
-export const handleApiError = (res: ErrorRes): Record<string, string> | undefined => {
-  const { status, data } = res;
-
-  // 通信失敗は customFetch が status: 0 で返すため、2xx に限定して判定する
-  if (status >= 200 && status < 300) return undefined;
-
-  if (status === 401) {
-    redirect(ROUTES.LOGIN);
-  }
-  if (status === 403) {
-    redirect(
-      `${ROUTES.ERROR}?title=${encodeURIComponent('アクセス権限がありません')}&message=${encodeURIComponent('このページを表示する権限がありません。')}`,
-    );
-  }
-  if (status === 400 && data?.errorCode === 'VALIDATION_ERROR') {
-    return getFieldErrors(data);
-  }
-
-  redirect(ROUTES.ERROR);
-};
+const res = await getSampleItems();
+handleApiError(res); // 401・403・その他のエラーは遷移まで行う
+return res.data;
 ```
 
-### _services（Server Component：データ取得）
+Server Action（フォーム送信）
 
 ```tsx
-// _lib/_services/getSampleItemsServer.ts
-import 'server-only';
-import { getSampleItems } from '@/api/openapi/generated';
-import { handleApiError } from '@/lib/services/handleApiError';
-import type { SampleItem } from '../../_types';
+const res = await updateSampleItem(id, body);
 
-export const fetchSampleItems = async (): Promise<SampleItem[]> => {
-  const res = await getSampleItems();
+// 個別に扱うステータスは、handleApiError より先に判定する
+if (res.status === 409) return { conflict: true };
 
-  // 401・403・その他のエラーは handleApiError が遷移まで行う（try/catch で囲まない）
-  // 生成型は成功時のdataも含むため、handleApiError の引数型へキャストする
-  handleApiError(res as Parameters<typeof handleApiError>[0]);
-
-  return res.data as SampleItem[];
-};
+// 400 VALIDATION_ERROR のときだけ fieldErrors が返る
+const fieldErrors = handleApiError(res);
+return { fieldErrors };
 ```
 
-### _services（Server Action：フォーム送信と個別判定）
+_hooks（戻り値でフォームにエラーを反映）
 
 ```tsx
-// _lib/_services/updateSampleItemServer.ts
-'use server';
-import { updateSampleItem } from '@/api/openapi/generated';
-import { handleApiError } from '@/lib/services/handleApiError';
-import type { SampleItemRequest } from '../../_types';
-
-type PutSampleItemResult = {
-  fieldErrors?: Record<string, string>;
-  conflict?: boolean;
-};
-
-export const putSampleItem = async (
-  id: number,
-  body: SampleItemRequest,
-): Promise<PutSampleItemResult> => {
-  const res = await updateSampleItem(id, body);
-
-  // この画面で個別に扱うステータスは、handleApiError より先に判定する
-  // （Server Action では throw した内容がクライアントに届かないため、戻り値で返す）
-  if (res.status === 409) {
-    return { conflict: true };
-  }
-
-  // 400 VALIDATION_ERROR は fieldErrors が返る。401・403・その他は handleApiError が遷移まで行う
-  const fieldErrors = handleApiError(res as Parameters<typeof handleApiError>[0]);
-  if (fieldErrors) {
-    return { fieldErrors };
-  }
-
-  return {};
-};
+const result = await putSampleItem(id, toRequest(values));
+if (result.fieldErrors) {
+  applyFieldErrors(form, result.fieldErrors);
+  return;
+}
 ```
 
-### _hooks（Server Action の戻り値でフォームにエラーを反映）
-
-```tsx
-// _lib/_hooks/useSampleForm.ts
-'use client';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { applyFieldErrors } from '@/lib/services/applyFieldErrors';
-import { putSampleItem } from '../_services/updateSampleItemServer';
-import { sampleFormSchema, type SampleFormValues } from '../_schemas/formSchema';
-
-export const useSampleForm = (id: number) => {
-  const form = useForm<SampleFormValues>({
-    resolver: zodResolver(sampleFormSchema),
-  });
-
-  const onSubmit = form.handleSubmit(async (values) => {
-    // 前回の送信で出たサーバーエラーを消す
-    form.clearErrors();
-
-    const result = await putSampleItem(id, toRequest(values));
-
-    // 400 VALIDATION_ERROR: 項目ごとにフォームへ反映する
-    if (result.fieldErrors) {
-      applyFieldErrors(form, result.fieldErrors);
-      return;
-    }
-
-    // 個別に扱うエラー（409）: フォーム全体のエラーとして表示する
-    if (result.conflict) {
-      form.setError('root', {
-        message: '他のユーザーによって更新されています。再読み込みしてください',
-      });
-      return;
-    }
-
-    // ここに成功後の処理を書く
-  });
-
-  return { form, onSubmit };
-};
-```
+※ 生成型の都合で `handleApiError` の引数に型の変換が必要な場合は、アプリ側の実装に合わせる。
 
 ### _schemas（フォーム用スキーマの自前定義）
 
