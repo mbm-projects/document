@@ -85,7 +85,8 @@ my-app/
 │   │   │   ├── getFieldErrors.ts
 │   │   │   └── applyFieldErrors.ts
 │   │   ├── utils/
-│   │   │   └── formatDate.ts
+│   │   │   ├── formatDate.ts
+│   │   │   └── formatFieldErrors.ts
 │   │   └── doc/
 │   │
 │   ├── types/
@@ -214,6 +215,7 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
 - *_components**
     - そのページの中だけで使い、他のページでは絶対に使い回さない専用のUIコンポーネントのみを配置する。
     - 例外：`sample/` 配下のサンプルページ専用の共通部品（`Input`、`Footer` など）は、`sample/_components/` に置いてよい。本番用の共通部品は `src/components/` に置く。
+    - 例外：`sample/` 配下の動作確認用ページ（`handleApiError` や `fieldErrors` の動作確認など）は、お手本ではなく確認用のため、`_lib/` などの構成を簡略化してよい。
     - `page.tsx` が長くなるのを防ぐため、フォームやカードといったパーツ単位でファイルを適切に細分化する。
     - 状態管理やClient Components・Server Componentsを配置する
     - Client Components(`use client`)を使う記述は必ず`_components/`に書き出す(`page.tsx`には記載しない)。
@@ -223,6 +225,13 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
     - システム全体で共通して使うモデルなどの型は、ここではなくルート直下の `/types` から読み込んで利用する。
     - `src/api/openapi/generated/` の型を利用する場合は、他ファイルから直接importさせず、必ずここで受けて再定義（re-export、または加工）してから配下へ渡す。
     - `PageProps` のみは`_types/` に記述せず、`page.tsxに記述する`
+    - 生成型は `_types/index.ts` で `export type { ... } from` により受けて re-export する。ESLint では強制せず、規約とレビューで担保する。
+
+    ```ts
+    // _types/index.ts
+    // 生成型はこのファイルで受けて re-export する。_types 以外から生成型を直接 import しない。
+    export type { LoginRequest } from "@/api/openapi/generated/model";
+    ```
 - *_services**
     - APIサーバーに対して、データの取得（GET）や送信（POST/PUT等）を行う通信処理のみを定義する。
     - **通信処理そのものは自前で `fetch` を書かず、`openapi/generated` が生成したAPI通信関数を呼び出す**。`_services` はその薄いラッパーとして、ステータス判定・エラー制御・呼び出し側に返す形への整形のみを担う。
@@ -338,6 +347,7 @@ Server Component のままにする。
     - 1ファイル1公開関数(private関数は除く)で実装する。
 - **utils/**
     - `formatDate` のように、入力に対して決まった値を返すだけの純粋関数のみを置く。
+    - `formatFieldErrors`（項目別エラーを react-hook-form の `setError` に渡しやすい形へ変換する）もここに置く。`applyFieldErrors` が内部で使う。
     - ページ固有の加工処理は置かず `_utils/` へ。
 - **doc/**
     - 実装方針や設計判断など、コードに残しづらい情報をドキュメントとして残す。
@@ -375,17 +385,17 @@ Server Component のままにする。
 
 ```tsx
 // orval.config.ts
-import { defineConfig } from 'orval';
+import { defineConfig } from "orval";
 
 export default defineConfig({
   sample: {
-    input: { target: './openapi.json' },
+    input: { target: "./openapi.json" },
     output: {
-      mode: 'tags-split',
-      client: 'fetch',
-      target: 'src/api/openapi/generated',
+      mode: "tags-split",
+      client: "fetch",
+      target: "src/api/openapi/generated",
       // 未指定だと model/ が生成されず target 側にスキーマが混在するため必須
-      schemas: 'src/api/openapi/generated/model',
+      schemas: "src/api/openapi/generated/model",
       // index.ts 経由の import を前提とするため明示（デフォルトtrue）
       indexFiles: true,
       // 削除されたエンドポイントのファイルが残らないよう生成前にクリーンする
@@ -393,8 +403,8 @@ export default defineConfig({
       // 生成関数の fetch を customFetch 経由にする（ベースURLの付与、通信失敗の status: 0 化）
       override: {
         mutator: {
-          path: './src/api/fetcher.ts',
-          name: 'customFetch',
+          path: "./src/api/fetcher.ts",
+          name: "customFetch",
         },
       },
     },
@@ -489,22 +499,22 @@ const form = useForm<SampleFormValues>({
 
 ```tsx
 // _lib/_schemas/formSchema.ts
-import { z } from 'zod';
+import { z } from "zod";
 
 // APIのスキーマとは独立してフォーム用に定義する
 export const signupFormSchema = z
   .object({
-    email: z.string().email('メールアドレスの形式が正しくありません'),
-    password: z.string().min(8, 'パスワードは8文字以上で入力してください'),
+    email: z.string().email("メールアドレスの形式が正しくありません"),
+    password: z.string().min(8, "パスワードは8文字以上で入力してください"),
     confirmPassword: z.string(),
     // UXのため全角も受け付け、送信時に半角へ変換する
     postalCode: z
       .string()
-      .regex(/^[0-9０-９]{3}-?[0-9０-９]{4}$/, '郵便番号の形式が正しくありません'),
+      .regex(/^[0-9０-９]{3}-?[0-9０-９]{4}$/, "郵便番号の形式が正しくありません"),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'パスワードが一致しません',
-    path: ['confirmPassword'],
+    message: "パスワードが一致しません",
+    path: ["confirmPassword"],
   });
 
 export type SignupFormValues = z.infer<typeof signupFormSchema>;
@@ -558,13 +568,13 @@ export type SignupFormValues = z.infer<typeof signupFormSchema>;
 | **改行コード (Line End)** | `LF` に統一 | Windows環境でも `CRLF` ではなく `LF`（`.gitattributes` で強制する） |
 | **1行の文字数制限** | 最大100文字（超える場合は改行） | Prettier の `printWidth: 100` |
 | **セミコロン** | 文末のセミコロンは必須 | `const a = 1;` |
-| **クォート** | シングルクォートを使用（JSXの属性値はダブルクォート） | `import { z } from 'zod';` / `<div className="flex">` |
-| **末尾カンマ (Trailing Comma)** | 複数行に分かれる場合は必ず付ける | Prettier の `trailingComma: 'all'` |
+| **クォート** | ダブルクォートを使用（JSXの属性値も同じ） | `import { z } from "zod";` / `<div className="flex">` |
+| **末尾カンマ (Trailing Comma)** | 複数行に分かれる場合は必ず付ける | Prettier の `trailingComma: "all"` |
 | **波括弧の位置 (Braces)** | 行の末尾に開始括弧 `{` を置く（K&Rスタイル） | `if (condition) {` → 改行 → 処理 → `}` |
 | **余分な空白 (Whitespace)** | キーワードの前後、演算子の前後にはスペースを1つ空ける | `if (a === b)`（`if(a===b)` はNG） |
 | **ファイルの末尾** | ファイルの最後には必ず1つの改行を入れる | 末尾に空行を1行 |
 | **設定の優先順位** | 各アプリの `.prettierrc.cjs` の設定を優先する。本規約の値は標準値とする | `.prettierrc.cjs` が本規約と異なる場合は、`.prettierrc.cjs` に従う |
-| **書式の担保** | 手動で整えず Prettier に任せる。CIで `prettier --check` を実行する | 書式についてのレビュー指摘は行わない |
+| **書式の担保** | 手動で整えず Prettier に任せる。コミット時（husky + lint-staged）に必ず `prettier --write` を実行する | 書式についてのレビュー指摘は行わない |
 
 ---
 
