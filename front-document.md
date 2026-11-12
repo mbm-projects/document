@@ -34,7 +34,7 @@ my-app/
 │   │   │   │   └── DataCard.tsx
 │   │   │   ├── _lib/
 │   │   │   │   ├── _services/
-│   │   │   │   │   └── getDashboardDataClient.ts
+│   │   │   │   │   └── getDashboardData.ts
 │   │   │   │   ├── _hooks/
 │   │   │   │   │   └── useDashboardData.ts
 │   │   │   │   └── _schemas/
@@ -48,8 +48,8 @@ my-app/
 │   │       │   └── SampleForm.tsx
 │   │       ├── _lib/
 │   │       │   ├── _services/
-│   │       │   │   ├── getSampleItemsServer.ts
-│   │       │   │   └── updateSampleItemClient.ts
+│   │       │   │   ├── getSampleItems.ts
+│   │       │   │   └── updateSampleItem.ts
 │   │       │   ├── _hooks/
 │   │       │   │   └── useSampleData.ts
 │   │       │   ├── _schemas/
@@ -85,7 +85,8 @@ my-app/
 │   │   │   ├── getFieldErrors.ts
 │   │   │   └── applyFieldErrors.ts
 │   │   ├── utils/
-│   │   │   └── formatDate.ts
+│   │   │   ├── formatDate.ts
+│   │   │   └── formatFieldErrors.ts
 │   │   └── doc/
 │   │
 │   ├── types/
@@ -125,7 +126,7 @@ my-app/
 | ディレクトリ / ファイル | 詳細 |
 | --- | --- |
 | **`openapi/`** | Spring Boot（springdoc-openapi）が出力するOpenAPIスキーマから、OrvalでFetch Clientとして一括生成した型定義・API通信関数を配置するディレクトリ。 |
-| **`openapi/generated/index.ts`** | 配下の各タグ別ディレクトリ・共通モデルの内容を re-export する自動生成ファイル。利用側はこの `index.ts` 経由で参照できる。 |
+| **`openapi/generated/index.ts`** | 配下の各タグ別ディレクトリのAPI通信関数を re-export する自動生成ファイル。API通信関数はこの `index.ts` 経由で参照できる（型は `model/` から参照する）。 |
 | **`openapi/generated/model/`** | `output.schemas` で指定したスキーマ型の出力先。参照しているタグ数に関わらず、リクエスト/レスポンスのスキーマ型はすべてここにフラットに生成される（`{tag}/{tag}.ts` 側にはAPI通信関数のみが生成される）。 |
 | **`openapi/generated/{tag}/{tag}.ts`** | Orvalが `@Tag`（Controller単位）ごとに分割生成する、APIのリクエスト/レスポンス型・URL生成関数（`getXxxUrl`）・`fetch` 実行までを含むAPI通信関数 |
 | **`fetcher.ts`** | Orval生成のAPI通信関数が使う共通のfetch（`customFetch`）。ベースURLの付与、レスポンスの整形、通信失敗時の `status: 0` 化を行う。手書きのファイルで、Orvalの `override.mutator` から参照する。 |
@@ -147,7 +148,7 @@ my-app/
 - `openapi/generated/` 配下のファイルを **他ディレクトリへ手動コピーすることは禁止**。利用する場合は必ず `import` する。
 - `openapi/generated/` 配下の**API通信関数**（`getUser` など）を `_services` 以外のファイル（`page.tsx`, `_components`, `_hooks` など）から**直接importすることは禁止**する。必ず `_services` を経由する。
 - `openapi/generated/` 配下の**型**を `_types`,`/types/` 以外のファイル（`page.tsx`, `_components`, `_hooks` など）から**直接importすることは禁止**する。必ず後述の `_types`,`/types/` を経由する。
-- import は分割後の個別ファイルではなく、必ず `openapi/generated`（`index.ts`）から行う。
+- API通信関数の import は分割後の個別ファイルではなく、必ず `openapi/generated`（`index.ts`）から行う。型の import は `openapi/generated/model` から行う（`_types` / `/types/` のみ）。
 
 ---
 
@@ -178,7 +179,7 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
 | --- | --- |
 | **`_services/`** | 外部APIサーバーとの通信（Orval生成関数の呼び出しとエラー制御） |
 | **`_hooks/`** | 画面の状態管理やライフサイクルを扱うカスタムフック |
-| **`_schemas/`** | 入力バリデーションやデータ検証のルール（Zodなど） |
+| **`_schemas/`** | UX 上クライアント側の入力チェックが必要な場合に作成する、入力バリデーションのルール（Zodなど） |
 | **`_utils/`** | そのページ内専用の共通処理や計算を行う関数群 |
 | **`_constants/`** | そのページ内専用の選択肢や固定値などの定数群 |
 
@@ -213,6 +214,8 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
     - ページの本体コンテンツを表示するために、必ず引数で `children` を受け取って枠組みの中に配置する。
 - *_components**
     - そのページの中だけで使い、他のページでは絶対に使い回さない専用のUIコンポーネントのみを配置する。
+    - 例外：`sample/` 配下のサンプルページ専用の共通部品（`Input`、`Footer` など）は、`sample/_components/` に置いてよい。本番用の共通部品は `src/components/` に置く。
+    - 例外：`sample/` 配下の動作確認用ページ（`handleApiError` や `fieldErrors` の動作確認など）は、お手本ではなく確認用のため、`_lib/` などの構成を簡略化してよい。
     - `page.tsx` が長くなるのを防ぐため、フォームやカードといったパーツ単位でファイルを適切に細分化する。
     - 状態管理やClient Components・Server Componentsを配置する
     - Client Components(`use client`)を使う記述は必ず`_components/`に書き出す(`page.tsx`には記載しない)。
@@ -222,6 +225,13 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
     - システム全体で共通して使うモデルなどの型は、ここではなくルート直下の `/types` から読み込んで利用する。
     - `src/api/openapi/generated/` の型を利用する場合は、他ファイルから直接importさせず、必ずここで受けて再定義（re-export、または加工）してから配下へ渡す。
     - `PageProps` のみは`_types/` に記述せず、`page.tsxに記述する`
+    - 生成型は `_types/index.ts` で `export type { ... } from` により受けて re-export する。ESLint では強制せず、規約とレビューで担保する。
+
+    ```ts
+    // _types/index.ts
+    // 生成型はこのファイルで受けて re-export する。_types 以外から生成型を直接 import しない。
+    export type { LoginRequest } from "@/api/openapi/generated/model";
+    ```
 - *_services**
     - APIサーバーに対して、データの取得（GET）や送信（POST/PUT等）を行う通信処理のみを定義する。
     - **通信処理そのものは自前で `fetch` を書かず、`openapi/generated` が生成したAPI通信関数を呼び出す**。`_services` はその薄いラッパーとして、ステータス判定・エラー制御・呼び出し側に返す形への整形のみを担う。
@@ -234,8 +244,8 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
     - **バックエンドとの通信は、サーバー側（Server Component、Server Action）でのみ行う**。クライアントからの操作（フォーム送信など）は Server Action（`'use server'`）を経由し、クライアントコンポーネントや `_hooks` から生成関数を直接呼ばない。
     - **Server Action で例外をthrowしても、クライアントには `status` や `fieldErrors` が届かない**。production ビルドでは `message` が汎用文字列に差し替えられ、独自プロパティは剥がされる（情報漏洩防止のための仕様）。この差し替えは `next dev` では行われないため、必ず `next build && next start` で確認する。画面に伝えたい内容（項目別エラーなど）は、throwせず**戻り値で返す**。
     - 通信と最低限のエラー制御のみを行い、画面にまつわる状態（State）はここでは一切扱わない。
-    - サーバサイドでのみAPIサーバーからデータを取得するファイルには必ず`'server-only'` を記述する
-    - サーバサイドで実行するファイルは○○Server.ts、クライアントサイドで実行するファイルは○○Client.tsとする
+    - サーバサイドでのみAPIサーバーからデータを取得するファイルには必ず`'server-only'` を記述する。Server Action（`'use server'`）のファイルにも、`'use server'` に加えて `'server-only'` を記述する
+    - ファイル名は「動詞 + 対象」とし、実行環境（Server / Client）の接尾辞は付けない（`_services` はサーバー側でのみ実行する）
     - 1ファイル1公開関数(private関数は除く)で実装する
     
     **エラー処理の責務対応表**
@@ -251,6 +261,7 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
     | 画面ごとに扱いを変えたいエラー（404の未存在、409の競合など） | 各 `_services` | `handleApiError` を呼ぶ前に判定し、戻り値で `_hooks` に伝える |
 
     ※ 通信失敗や予期せぬエラーではエラー画面へ遷移するため、フォームの入力内容は失われる。
+    ※ 403 の `title`・`message` は、URL のクエリでエラー画面に渡す。URL から受け取った文言をそのまま表示する仕様のため、文言に機密情報を含めない。
     ※ 画面ごとの文言の出し分けが要件にあるエラーだけを、各 `_services` で個別に判定する。
     
 - *_hooks**
@@ -262,7 +273,7 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
     - 認証切れ・権限なし・予期せぬエラーは `handleApiError` が遷移まで行うため、ここでは扱わない。
     - 1ファイル1公開関数(private関数は除く)で実装する
 - *_schemas**
-    - Zodなどを使った入力チェック（バリデーション）の定義を置く。
+    - クライアント側の入力チェックは基本的に行わない（サーバーの 400 `VALIDATION_ERROR` を `applyFieldErrors` でフォームに反映する）。入力途中の即時チェックなど、UX 上必要な画面に限り、Zodなどを使った入力チェック（バリデーション）の定義をここに置く。
     - 定義したスキーマから型を抽出して、フォーム送信時のバリデーションや表示の検証ルールとして使用する。
     - **フォームのスキーマは、APIのスキーマとは別物として、このディレクトリ内で自前定義する**。`src/api/openapi/generated/` から派生させたり、そこからimportしたりしてはならない。
     - 仮に現時点でAPIのスキーマと内容が一致していても、必ず別で定義する（郵便番号の全角許容、数値のカンマ区切り表示、入力途中の段階的な形状など、フォーム側とAPI側で扱う値の形は一致しない場合があるため）。
@@ -279,7 +290,7 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
 
 - page.tsxには描画などの最低限の処理のみ記述し、API通信・状態管理など他の処理はサブディレクトリ内に別ファイルに記述する
 - 他の画面などで使う処理は共通の(`src/`直下の)`lib/`・`components/`・`types/`・`constants/`などに配置する
-- バリデーションチェックはzodライブラリを利用する（スキーマはAPIのスキーマから生成せず `_schemas` で自前定義する）
+- クライアント側のバリデーションは基本的に行わず、サーバーの 400 `VALIDATION_ERROR` をフォームに反映する。UX 上必要な画面でのみ zod を利用する（スキーマはAPIのスキーマから生成せず `_schemas` で自前定義する）
 - サブディレクトリにはディレクトリ名の前に`_`をつける
 - `src/api/openapi/generated/` 配下のファイルは自動生成物であり、手動編集・手動コピーを禁止する。利用する場合は、API通信関数は必ず `_services` を経由し、型は必ず `_types` / `/types/` を経由してimportする
 - 全画面共通のエラー処理は `src/lib/services/` の `handleApiError` に集約し、画面固有のエラー処理は各 `_services` で行う
@@ -291,6 +302,7 @@ AppRouterを使用しAPI通信、画面の状態管理、バリデーション�
     - 共通エラー処理
     _services ───> lib/services (handleApiError)
 - バックエンドとの通信はサーバー側（Server Component / Server Action）でのみ行う。クライアントコンポーネントや `_hooks` から生成関数を直接呼ばない
+- `error.tsx` / `not-found.tsx` は現時点では使用しない（Next.js の標準画面）。エラー画面は `handleApiError` の遷移先（`ROUTES.ERROR`）に集約する
 - サーバサイドコンポーネントでは`useEffect` は使用せず直接非同期でフェッチする
 
 ---
@@ -315,7 +327,7 @@ Server Component のままにする。
 アプリケーション全体の共通ロジックや、日付操作・文字列加工など、画面から切り離された共通の裏方処理（関数群）を隠蔽する層。
 
 - **config/**
-    - `.env` から読み込んだ値をそのまま各所で使わず、ここで型付け・検証してから提供する。
+    - `.env` から読み込んだ値のうち、型付けや検証が必要なものは、そのまま各所で使わず、ここで型付け・検証してから提供する。検証が不要な単純な値（`api/fetcher.ts` が読むベースURLなど）は、直接参照してもよい。
 - **security/**
     - APIサーバーへのリクエストに必要な認証トークンの取得・付与、
     およびログイン状態に基づく画面アクセスの制御を行う。
@@ -335,6 +347,7 @@ Server Component のままにする。
     - 1ファイル1公開関数(private関数は除く)で実装する。
 - **utils/**
     - `formatDate` のように、入力に対して決まった値を返すだけの純粋関数のみを置く。
+    - `formatFieldErrors`（項目別エラーを react-hook-form の `setError` に渡しやすい形へ変換する）もここに置く。`applyFieldErrors` が内部で使う。
     - ページ固有の加工処理は置かず `_utils/` へ。
 - **doc/**
     - 実装方針や設計判断など、コードに残しづらい情報をドキュメントとして残す。
@@ -372,17 +385,17 @@ Server Component のままにする。
 
 ```tsx
 // orval.config.ts
-import { defineConfig } from 'orval';
+import { defineConfig } from "orval";
 
 export default defineConfig({
   sample: {
-    input: { target: './openapi.json' },
+    input: { target: "./openapi.json" },
     output: {
-      mode: 'tags-split',
-      client: 'fetch',
-      target: 'src/api/openapi/generated',
+      mode: "tags-split",
+      client: "fetch",
+      target: "src/api/openapi/generated",
       // 未指定だと model/ が生成されず target 側にスキーマが混在するため必須
-      schemas: 'src/api/openapi/generated/model',
+      schemas: "src/api/openapi/generated/model",
       // index.ts 経由の import を前提とするため明示（デフォルトtrue）
       indexFiles: true,
       // 削除されたエンドポイントのファイルが残らないよう生成前にクリーンする
@@ -390,8 +403,8 @@ export default defineConfig({
       // 生成関数の fetch を customFetch 経由にする（ベースURLの付与、通信失敗の status: 0 化）
       override: {
         mutator: {
-          path: './src/api/fetcher.ts',
-          name: 'customFetch',
+          path: "./src/api/fetcher.ts",
+          name: "customFetch",
         },
       },
     },
@@ -473,26 +486,35 @@ if (result.fieldErrors) {
 
 ※ 生成型の都合で `handleApiError` の引数に型の変換が必要な場合は、アプリ側の実装に合わせる。
 
+### _hooks（zod を使う場合）
+
+```tsx
+const form = useForm<SampleFormValues>({
+  resolver: zodResolver(sampleFormSchema),
+});
+// サーバーからの 400 VALIDATION_ERROR は、zod を使う場合も applyFieldErrors で反映する
+```
+
 ### _schemas（フォーム用スキーマの自前定義）
 
 ```tsx
 // _lib/_schemas/formSchema.ts
-import { z } from 'zod';
+import { z } from "zod";
 
 // APIのスキーマとは独立してフォーム用に定義する
 export const signupFormSchema = z
   .object({
-    email: z.string().email('メールアドレスの形式が正しくありません'),
-    password: z.string().min(8, 'パスワードは8文字以上で入力してください'),
+    email: z.string().email("メールアドレスの形式が正しくありません"),
+    password: z.string().min(8, "パスワードは8文字以上で入力してください"),
     confirmPassword: z.string(),
     // UXのため全角も受け付け、送信時に半角へ変換する
     postalCode: z
       .string()
-      .regex(/^[0-9０-９]{3}-?[0-9０-９]{4}$/, '郵便番号の形式が正しくありません'),
+      .regex(/^[0-9０-９]{3}-?[0-9０-９]{4}$/, "郵便番号の形式が正しくありません"),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'パスワードが一致しません',
-    path: ['confirmPassword'],
+    message: "パスワードが一致しません",
+    path: ["confirmPassword"],
   });
 
 export type SignupFormValues = z.infer<typeof signupFormSchema>;
@@ -529,9 +551,9 @@ export type SignupFormValues = z.infer<typeof signupFormSchema>;
 
 | 対象 | ルール | 例 |
 | --- | --- | --- |
-| ファイル名 | 動詞 + 対象 + 実行環境（`Server` / `Client`） | `getSampleItemsServer.ts`, `updateSampleItemClient.ts` |
+| ファイル名 | 動詞 + 対象（実行環境の接尾辞は付けない） | `getSampleItems.ts`, `updateSampleItem.ts` |
 | 関数名 | HTTPメソッドを想起させる動詞 + 対象 | `fetchSampleItems`, `putSampleItem`, `postSampleItem` |
-- ファイル名と関数名は一致させなくてよい。ファイル名は「どこで実行されるか」、関数名は「何をするか」を表す。
+- ファイル名と関数名は一致させなくてよい。`_services` はサーバー側でのみ実行するため、`Server` / `Client` の接尾辞は付けない（サーバー専用であることは `'server-only'` / `'use server'` で示す）。
 - 1ファイル1公開関数のため、ファイル名から公開関数が一意に特定できる粒度を保つ。
 
 ---
@@ -544,14 +566,15 @@ export type SignupFormValues = z.infer<typeof signupFormSchema>;
 | --- | --- | --- |
 | **インデント (Indent)** | スペース2個（タブ文字は禁止） | Prettier のデフォルトに従う |
 | **改行コード (Line End)** | `LF` に統一 | Windows環境でも `CRLF` ではなく `LF`（`.gitattributes` で強制する） |
-| **1行の文字数制限** | 最大150文字（超える場合は改行） | Prettier の `printWidth: 100` |
+| **1行の文字数制限** | 最大100文字（超える場合は改行） | Prettier の `printWidth: 100` |
 | **セミコロン** | 文末のセミコロンは必須 | `const a = 1;` |
-| **クォート** | シングルクォートを使用（JSXの属性値はダブルクォート） | `import { z } from 'zod';` / `<div className="flex">` |
-| **末尾カンマ (Trailing Comma)** | 複数行に分かれる場合は必ず付ける | Prettier の `trailingComma: 'all'` |
+| **クォート** | ダブルクォートを使用（JSXの属性値も同じ） | `import { z } from "zod";` / `<div className="flex">` |
+| **末尾カンマ (Trailing Comma)** | 複数行に分かれる場合は必ず付ける | Prettier の `trailingComma: "all"` |
 | **波括弧の位置 (Braces)** | 行の末尾に開始括弧 `{` を置く（K&Rスタイル） | `if (condition) {` → 改行 → 処理 → `}` |
 | **余分な空白 (Whitespace)** | キーワードの前後、演算子の前後にはスペースを1つ空ける | `if (a === b)`（`if(a===b)` はNG） |
 | **ファイルの末尾** | ファイルの最後には必ず1つの改行を入れる | 末尾に空行を1行 |
-| **書式の担保** | 手動で整えず Prettier に任せる。CIで `prettier --check` を実行する | 書式についてのレビュー指摘は行わない |
+| **設定の優先順位** | 各アプリの `.prettierrc.cjs` の設定を優先する。本規約の値は標準値とする | `.prettierrc.cjs` が本規約と異なる場合は、`.prettierrc.cjs` に従う |
+| **書式の担保** | 手動で整えず Prettier に任せる。コミット時（husky + lint-staged）に必ず `prettier --write` を実行する | 書式についてのレビュー指摘は行わない |
 
 ---
 
