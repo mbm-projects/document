@@ -257,6 +257,14 @@ public class UserResponse {
     - 単純な汎用関数は `util` に記載するので注意
     - 外部から呼ばれる場合はpublic、関数内のコードが長くなる場合はprivateで関数化して呼び出す。
     - serviceパッケージは制約緩いが学生の開発のためある程度の緩さは許容するものとする
+- **メソッドの分け方**
+    - 「Responseを返すメソッド」と「Repositoryにアクセスするメソッド」を分ける。他のServiceから同じデータが必要になったときに、Response組み立てを経由せず使い回せるようにするため
+    - Responseを返すメソッド：Controllerから呼ばれる。リクエストの値を受け取り、ロール判定・検索条件の組み立て・Responseの組み立てを行う（戻り値は `dto/response`）
+    - Repositoryアクセスのメソッド：Repositoryを呼ぶだけ。ロールやResponseに依存しない。他のServiceからも呼べる（戻り値は `dto/db`・`entity`・`List` など）
+    - 例：イベント一覧取得API（`EventService`）
+        - `getEvents(...)`：`EventListResponse` を返す（ロール判定・検索条件の組み立て・Response組み立て）
+        - `findEvents(condition)`・`countEvents(condition)`：`EventRepository` の `findByCondition`・`countByCondition` を呼ぶだけ
+        - 他のServiceでイベント一覧が必要な場合は、`getEvents` ではなく `findEvents` を呼ぶ（`EventRepository` は `EventService` からのみ呼び出す）
 
 ---
 
