@@ -263,6 +263,7 @@ public class UserResponse {
     - Repositoryアクセスのメソッド：Repositoryを呼ぶだけ。ロールやResponseに依存しない。他のServiceからも呼べる（戻り値は `dto/db`・`entity`・`List` など）
     - 例：イベント一覧取得API（`EventService`）
         - `getEvents(...)`：`EventListResponse` を返す（ロール判定・検索条件の組み立て・Response組み立て）
+            - ロールの判定（`ADMIN` か `STUDENT`）は、Serviceに独自の判定メソッドを作らず、`RoleUtil.resolveAdminOrStudent(CurrentUserRoles.get())` を使う
         - `findEvents(condition)`・`countEvents(condition)`：`EventRepository` の `findByCondition`・`countByCondition` を呼ぶだけ
         - 他のServiceでイベント一覧が必要な場合は、`getEvents` ではなく `findEvents` を呼ぶ（`EventRepository` は `EventService` からのみ呼び出す）
 
@@ -954,6 +955,20 @@ Set<RoleType> roles = CurrentUserRoles.get();
 - アクセスしてよいかの判定には使わない。
   - URLごとの許可は `RoleRules` に書く。
   - 認可を通過した後に業務ルールで拒否する場合は `PermissionDeniedException`（403）を投げる。
+
+### ロールを ADMIN か STUDENT に判定する
+
+レスポンスの `role` に「`ADMIN` か `STUDENT`」を返す場合は、Serviceに独自の判定メソッドを作らず、
+`util/RoleUtil.resolveAdminOrStudent(Set<RoleType>)` を使う。
+
+```java
+RoleType role = RoleUtil.resolveAdminOrStudent(CurrentUserRoles.get());
+```
+
+- 引数のロールに `ADMIN` が含まれれば `ADMIN`、それ以外は `STUDENT` を返す。
+  - 実行委員長・ブース責任者・ブース担当者は生徒として扱い、`STUDENT` になる。
+- ロールの取り出し（`CurrentUserRoles.get()`）と判定（`RoleUtil`）は分けている。
+  `util` は状態を持たない純粋な処理だけを置く規約のため、`RoleUtil` は SecurityContext を参照せず、ロールを引数で受け取る。
 
 
 ## 参考記事
