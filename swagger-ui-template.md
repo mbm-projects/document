@@ -31,6 +31,10 @@
 
 - `{機能名}ApiDoc`クラスの中に、HTTPメソッド名のアノテーション（`@Post`・`@Get`・`@Put`・`@Delete`）を`@interface`で定義する。規約（config.md）に従う
 - `@Operation`の`description`に、必須項目・ファイルの仕様（形式・サイズ）・エラーになる条件を書く
+- `@Operation`の`description`には、箇条書きの下（「【実装場所】」の前）に、リクエスト・レスポンス・エラーの表を、1つの`<details>`にまとめて書く（フロントが、どの値が何かを分かりやすくするため。Swagger UI上で閉じられる）
+  - `<summary>`は「リクエスト・レスポンス・エラーの詳細」とする。`<summary>`の下と`</details>`の前には空行を入れる（入れないと中の表が表示されない）
+  - 表は、該当するものだけを書く：リクエストヘッダー・パスパラメータ・クエリパラメータ・リクエストボディ（項目・型・必須・内容・バリデーション）、レスポンス（項目・型・nullになるか・内容。ネストした項目はドット区切り。コード値は数字と意味）、エラー（HTTPステータス・errorCode・発生条件）
+  - エラーの表は、`@ApiResponse`に書くもの（親Issueの「Swagger UIに記載するステータス」の行）だけを書く。共通エラー・Swagger UIに記載しないステータスは書かない
 - `@ApiResponse`は、親Issueのステータスの表の行ごとに書く。`content`には、スキーマ（`ErrorResponse`・`ValidationErrorResponse`・Response DTO）と、例（`@ExampleObject`）を書く
 - 400の例には、バリデーションの対象になる全項目のエラーを含める。`errors`は、項目名とメッセージのMapにする
 - `multipart/form-data`の場合は、`@RequestBody`は書かず、springdocの自動生成に任せる
@@ -73,6 +77,9 @@
 ## ApiDoc
 - `{機能名}ApiDoc`クラスの中に、HTTPメソッド名のアノテーション（`@Post`・`@Get`・`@Put`・`@Delete`）を`@interface`で定義する。規約（config.md）に従う。
 - `@Operation`の`description`に、必須項目・ファイルの仕様（形式・サイズ）・エラーになる条件を書く。
+- `@Operation`の`description`には、箇条書きの下（「【実装場所】」の前）に、リクエスト・レスポンス・エラーの表を、1つの`<details>`にまとめて書く（`<summary>`は「リクエスト・レスポンス・エラーの詳細」。`<summary>`の下と`</details>`の前には空行を入れる）。
+- 表は、該当するものだけを書く：リクエストヘッダー・パスパラメータ・クエリパラメータ・リクエストボディ（項目・型・必須・内容・バリデーション）、レスポンス（項目・型・nullになるか・内容。ネストした項目はドット区切り。コード値は数字と意味）、エラー（HTTPステータス・errorCode・発生条件）。
+- エラーの表は、`@ApiResponse`に書くもの（親Issueの「Swagger UIに記載するステータス」の行）だけを書く。共通エラー・Swagger UIに記載しないステータスは書かない。
 - `@ApiResponse`は、親Issueのステータスの表の行ごとに書く。`content`には、スキーマ（`ErrorResponse`・`ValidationErrorResponse`・Response DTO）と、例（`@ExampleObject`）を書く。
 - 400の例には、バリデーションの対象になる全項目のエラーを含める。`errors`は、項目名とメッセージのMapにする。
 - `multipart/form-data`の場合は、`@RequestBody`は書かず、springdocの自動生成に任せる。
@@ -167,6 +174,39 @@ public class EventOverviewApiDoc {
         - eventId が1未満の場合は400を返す
         - 存在しないイベントの場合は404を返す
         - ログイン済みの管理者のみ実行できる
+
+        <details>
+        <summary>リクエスト・レスポンス・エラーの詳細</summary>
+
+        ### パスパラメータ
+
+        | 項目 | 型 | 必須 | 内容 | バリデーション |
+        | --- | --- | --- | --- | --- |
+        | `eventId` | Integer | ○ | イベントID | 1以上 |
+
+        ### レスポンス（200）
+
+        | 項目 | 型 | null | 内容 |
+        | --- | --- | --- | --- |
+        | `role` | String | なし | ログインユーザーのロール（`ADMIN` か `STUDENT`） |
+        | `eventInfo.boothCount` | Integer | なし | ブース総数 |
+        | `eventInfo.studentCount` | Integer | なし | 参加生徒数 |
+        | `eventInfo.approvedApplicationCount` | Integer | なし | 承認済み申請数 |
+        | `eventInfo.totalApplicationCount` | Integer | なし | 申請総数 |
+        | `applicationSummary.budgetApplicationTotal` | Integer | なし | 予算申請合計 |
+        | `applicationSummary.budgetConfirmedTotal` | Integer | なし | 予算確定金額合計 |
+        | `applicationSummary.salesTotal` | Integer | なし | 売上合計 |
+        | `applicationManagement.boothApplication` | Object | なし | ブース申請の申請設定（申請名・締め切り・注意事項・更新日）。他の申請も同じ形（`salesApplication`・`equipmentApplication`・`budgetApplication`・`budgetUsageApplication`） |
+        | `applicationManagement.*.deadlineAt` | String | あり | 締め切り（申請設定が未登録の場合はnull） |
+
+        ### エラー
+
+        | HTTPステータス | errorCode | 発生条件 |
+        | --- | --- | --- |
+        | 400 | `INVALID_PARAMETER` | `eventId` が1未満など、パラメータの形式が正しくない |
+        | 404 | `EVENT_NOT_FOUND` | 指定した`eventId`のイベントが存在しない |
+
+        </details>
         """)
     @Parameter(name = "eventId", in = ParameterIn.PATH, description = "イベントID", example = "1")
     @ApiResponse(responseCode = "200", description = "取得成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = EventOverviewResponse.class), examples = @ExampleObject(name = "取得成功", value = """
