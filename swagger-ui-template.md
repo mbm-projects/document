@@ -174,6 +174,39 @@ public class EventOverviewApiDoc {
         - eventId が1未満の場合は400を返す
         - 存在しないイベントの場合は404を返す
         - ログイン済みの管理者のみ実行できる
+
+        <details>
+        <summary>リクエスト・レスポンス・エラーの詳細</summary>
+
+        ### パスパラメータ
+
+        | 項目 | 型 | 必須 | 内容 | バリデーション |
+        | --- | --- | --- | --- | --- |
+        | `eventId` | Integer | ○ | イベントID | 1以上 |
+
+        ### レスポンス（200）
+
+        | 項目 | 型 | null | 内容 |
+        | --- | --- | --- | --- |
+        | `role` | String | なし | ログインユーザーのロール（`ADMIN` か `STUDENT`） |
+        | `eventInfo.boothCount` | Integer | なし | ブース総数 |
+        | `eventInfo.studentCount` | Integer | なし | 参加生徒数 |
+        | `eventInfo.approvedApplicationCount` | Integer | なし | 承認済み申請数 |
+        | `eventInfo.totalApplicationCount` | Integer | なし | 申請総数 |
+        | `applicationSummary.budgetApplicationTotal` | Integer | なし | 予算申請合計 |
+        | `applicationSummary.budgetConfirmedTotal` | Integer | なし | 予算確定金額合計 |
+        | `applicationSummary.salesTotal` | Integer | なし | 売上合計 |
+        | `applicationManagement.boothApplication` | Object | なし | ブース申請の申請設定（申請名・締め切り・注意事項・更新日）。他の申請も同じ形（`salesApplication`・`equipmentApplication`・`budgetApplication`・`budgetUsageApplication`） |
+        | `applicationManagement.*.deadlineAt` | String | あり | 締め切り（申請設定が未登録の場合はnull） |
+
+        ### エラー
+
+        | HTTPステータス | errorCode | 発生条件 |
+        | --- | --- | --- |
+        | 400 | `INVALID_PARAMETER` | `eventId` が1未満など、パラメータの形式が正しくない |
+        | 404 | `EVENT_NOT_FOUND` | 指定した`eventId`のイベントが存在しない |
+
+        </details>
         """)
     @Parameter(name = "eventId", in = ParameterIn.PATH, description = "イベントID", example = "1")
     @ApiResponse(responseCode = "200", description = "取得成功", content = @Content(mediaType = "application/json", schema = @Schema(implementation = EventOverviewResponse.class), examples = @ExampleObject(name = "取得成功", value = """
