@@ -31,6 +31,10 @@
 
 - `{機能名}ApiDoc`クラスの中に、HTTPメソッド名のアノテーション（`@Post`・`@Get`・`@Put`・`@Delete`）を`@interface`で定義する。規約（config.md）に従う
 - `@Operation`の`description`に、必須項目・ファイルの仕様（形式・サイズ）・エラーになる条件を書く
+- `@Operation`の`description`には、箇条書きの下（「【実装場所】」の前）に、リクエスト・レスポンス・エラーの表を、1つの`<details>`にまとめて書く（フロントが、どの値が何かを分かりやすくするため。Swagger UI上で閉じられる）
+  - `<summary>`は「リクエスト・レスポンス・エラーの詳細」とする。`<summary>`の下と`</details>`の前には空行を入れる（入れないと中の表が表示されない）
+  - 表は、該当するものだけを書く：リクエストヘッダー・パスパラメータ・クエリパラメータ・リクエストボディ（項目・型・必須・内容・バリデーション）、レスポンス（項目・型・nullになるか・内容。ネストした項目はドット区切り。コード値は数字と意味）、エラー（HTTPステータス・errorCode・発生条件）
+  - エラーの表は、`@ApiResponse`に書くもの（親Issueの「Swagger UIに記載するステータス」の行）だけを書く。共通エラー・Swagger UIに記載しないステータスは書かない
 - `@ApiResponse`は、親Issueのステータスの表の行ごとに書く。`content`には、スキーマ（`ErrorResponse`・`ValidationErrorResponse`・Response DTO）と、例（`@ExampleObject`）を書く
 - 400の例には、バリデーションの対象になる全項目のエラーを含める。`errors`は、項目名とメッセージのMapにする
 - `multipart/form-data`の場合は、`@RequestBody`は書かず、springdocの自動生成に任せる
@@ -73,6 +77,9 @@
 ## ApiDoc
 - `{機能名}ApiDoc`クラスの中に、HTTPメソッド名のアノテーション（`@Post`・`@Get`・`@Put`・`@Delete`）を`@interface`で定義する。規約（config.md）に従う。
 - `@Operation`の`description`に、必須項目・ファイルの仕様（形式・サイズ）・エラーになる条件を書く。
+- `@Operation`の`description`には、箇条書きの下（「【実装場所】」の前）に、リクエスト・レスポンス・エラーの表を、1つの`<details>`にまとめて書く（`<summary>`は「リクエスト・レスポンス・エラーの詳細」。`<summary>`の下と`</details>`の前には空行を入れる）。
+- 表は、該当するものだけを書く：リクエストヘッダー・パスパラメータ・クエリパラメータ・リクエストボディ（項目・型・必須・内容・バリデーション）、レスポンス（項目・型・nullになるか・内容。ネストした項目はドット区切り。コード値は数字と意味）、エラー（HTTPステータス・errorCode・発生条件）。
+- エラーの表は、`@ApiResponse`に書くもの（親Issueの「Swagger UIに記載するステータス」の行）だけを書く。共通エラー・Swagger UIに記載しないステータスは書かない。
 - `@ApiResponse`は、親Issueのステータスの表の行ごとに書く。`content`には、スキーマ（`ErrorResponse`・`ValidationErrorResponse`・Response DTO）と、例（`@ExampleObject`）を書く。
 - 400の例には、バリデーションの対象になる全項目のエラーを含める。`errors`は、項目名とメッセージのMapにする。
 - `multipart/form-data`の場合は、`@RequestBody`は書かず、springdocの自動生成に任せる。
