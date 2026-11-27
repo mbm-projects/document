@@ -17,6 +17,8 @@ GitHubのIssueを「親Issue」と「子Issue」で管理するためのテン�
 - [子Issue（汎用）](#child-generic)
 - [親Issue（API・CRUD）](#parent-api)
 - [子Issue（API・CRUD）](#child-api)
+- [親Issue（front・画面）](#parent-front)
+- [子Issue（front・画面）](#child-front)
 - [API・CRUD 作成手順](#child-creation-steps)
 
 ## 開発規約
@@ -33,6 +35,7 @@ GitHubのIssueを「親Issue」と「子Issue」で管理するためのテン�
 3. 親Issueの「子Issue」に `- [ ] #{子Issue番号}` を追記する
 4. 子Issueの作業が完了したら、親Issueのチェックを入れる
 5. APIの場合は、完了した子Issueの内容を親Issueの「詳細」にも反映する
+6. frontの画面の場合は、完了した子Issueのファイルの配置場所を親Issueにも追記する
 
 ---
 
@@ -837,6 +840,373 @@ API親Issueの「AI向け補足」とあわせて、下記を渡す。
 
 </details>
 
+---
+
+## 親Issue（front・画面） {#parent-front}
+
+画面単位の親Issueです。Issue名は画面名のみ（例：ログイン画面）。1画面につき、親Issueを1つ、子Issueを基本1つ作ります。
+
+- 構成は「詳細 → 子Issue → 前提条件 → ディレクトリ構造 → ファイル一覧と役割 → 呼ぶAPI → 各ファイルの仕様 → その他 → 要確認」です。
+- ディレクトリ構造・ファイル一覧・各ファイルの仕様は、[フロント開発規約](https://mbm-projects.github.io/document/front-document)に従って書きます。
+- 各ファイルの仕様は、`<details>` で折りたたみます（長くなるため）。
+- 部品が足りない場合は、部品の親Issueを別に立て、「前提条件」に書きます。
+- 子Issueの終了時に、親Issueへファイルの配置場所を追記します。
+- 実例：mbm-web-app の #131（ログイン画面）
+
+### 表示イメージ
+
+<div markdown="1" style="border:1px solid #d0d7de;border-radius:6px;padding:4px 20px;background:#f6f8fa;overflow-x:auto;">
+
+## 詳細
+
+（この画面で何をするか。参照するサンプル・規約）
+
+## 子Issue
+
+- [ ] #
+
+## 前提条件
+
+- [ ] （作成済みの部品・API・共通処理など）
+
+## ディレクトリ構造
+
+（`src/app/{画面名}/` 配下のtree図。作成済みの共通部品も載せる）
+
+## ファイル一覧と役割
+
+| ファイル | 種別 | 何をするか |
+| --- | --- | --- |
+
+## 呼ぶAPI
+
+| 用途 | メソッド / パス | Orval 関数 | 呼び出し元 | レスポンス |
+| --- | --- | --- | --- | --- |
+
+## 各ファイルの仕様
+
+▶ `page.tsx`（クリックで開く）
+
+## その他
+
+## 要確認
+
+</div>
+
+### コピー用Markdown
+
+````markdown
+## 詳細
+（この画面で何をするか。参照するサンプル・規約）
+
+## 子Issue
+- [ ] #
+
+## 前提条件
+- [ ] （作成済みの部品・API・共通処理など）
+
+## ディレクトリ構造
+```
+src/
+├── app/
+│   └── {画面名}/
+│       ├── page.tsx
+│       ├── _components/
+│       │   └── {画面名}Form.tsx
+│       ├── _lib/
+│       │   ├── _constants/
+│       │   ├── _hooks/
+│       │   │   └── use{画面名}Form.ts
+│       │   └── _services/
+│       │       └── {動詞}{対象}.ts
+│       └── _types/
+│           └── index.ts
+├── components/ui/common/                  # 作成済みの共通部品
+├── constants/routes.ts
+├── lib/services/                          # 作成済みの共通処理
+└── api/openapi/generated/                 # Orval 生成（編集しない）
+```
+
+依存の向き：`page.tsx` → `_components` → `_hooks` → `_services`（→ `_types`、`_constants`）→ `generated`
+
+## ファイル一覧と役割
+
+| ファイル（`src/app/{画面名}/` 配下） | 種別 | 何をするか |
+| --- | --- | --- |
+| `page.tsx` | Server Component | ページの枠。見出しとフォームを置く |
+| `_components/{画面名}Form.tsx` | Client Component | 画面のUI |
+| `_lib/_hooks/use{画面名}Form.ts` | hooks | 状態管理と送信処理 |
+| `_lib/_services/{動詞}{対象}.ts` | サービス | APIを呼ぶ |
+| `_types/index.ts` | 型 | 生成型を受けて再公開する |
+
+## 呼ぶAPI
+
+| 用途 | メソッド / パス | Orval 関数 | 呼び出し元 | レスポンス |
+| --- | --- | --- | --- | --- |
+| | GET `/api/...` | | `_lib/_services/...` | 200：／400：／401：／403： |
+
+## 各ファイルの仕様
+
+<details>
+<summary><code>page.tsx</code></summary>
+
+- Server Component にする。`'use client'` は書かない
+- 見出しとフォームの配置だけを書く。API 通信、hooks、型の処理は書かない
+</details>
+
+<details>
+<summary><code>_components/{画面名}Form.tsx</code></summary>
+
+- 先頭に `'use client'` を書く。1ファイル1コンポーネント
+- 項目：
+
+  | 項目 | 部品 | フォーム値 |
+  | --- | --- | --- |
+</details>
+
+<details>
+<summary><code>_lib/_hooks/use{画面名}Form.ts</code></summary>
+
+- `useForm` を定義する。フォームの値の型はファイル上部に書く
+- 送信処理、API呼び出し、エラーの反映を書く
+</details>
+
+<details>
+<summary><code>_lib/_services/{動詞}{対象}.ts</code></summary>
+
+- APIの呼び出しだけを書く（Orval 生成関数を呼び、ステータス判定とエラー制御を行う）
+- 共通エラーは `lib/services/` の共通ハンドラに渡す
+</details>
+
+<details>
+<summary><code>_types/index.ts</code></summary>
+
+- `generated`（`index.ts` 経由）の型を re-export する
+</details>
+
+## その他
+
+## 要確認
+````
+
+<details markdown="1">
+<summary>AI向け補足（front親Issue）</summary>
+
+````markdown
+# front親Issue（画面）作成ルール（AI向け）
+
+GitHubのIssueの内容を作成する。1画面につき、親Issueを1つ作り、子Issueを基本1つぶら下げる。
+
+## 開発規約
+- フロント: https://mbm-projects.github.io/document/front-document
+- バック: https://mbm-projects.github.io/document/back-document
+
+## 出力ルール
+- Issue名を先に出し、その下にIssue本文をMarkdownのコードブロックで出力する。
+- templateのfront matter（`---`で囲まれた `name` / `about` / `title` / `labels`）は出力しない。
+- Issue名は画面名のみを書く（例：ログイン画面）。ラベルは「親Issue」を付ける。
+- 子Issueの番号が未定の場合は `#` とだけ書く。
+
+## 構成
+- 見出しは「詳細 → 子Issue → 前提条件 → ディレクトリ構造 → ファイル一覧と役割 → 呼ぶAPI → 各ファイルの仕様 → その他 → 要確認」の順にする。不要な項目は省略してよい。
+- 詳細：この画面で何をするか、参照するサンプル・規約を書く。
+- 子Issue：`- [ ] #{子Issue番号}` の形式で書く。
+- 前提条件：作成済みの部品・API・共通処理を `- [x]`、未完了のものを `- [ ]` で書く。部品が足りない場合は、部品の親Issueを別に立てて書く。
+- ディレクトリ構造：`src/app/{画面名}/` 配下のtree図を書く。作成済みの共通部品（`components/ui/common`、`constants/routes.ts`、`lib/services`、`api/openapi/generated`）も載せ、依存の向きを書く。
+  - 規約：サブディレクトリは `_` 付き、`page.tsx` は Server Component、`'use client'` は `_components/` に書く、1ファイル1コンポーネント・1ファイル1公開関数。
+- ファイル一覧と役割：ファイルごとに、種別と「何をするか」を表で書く。
+- 呼ぶAPI：用途、メソッドとパス、Orval 関数、呼び出し元、レスポンス（ステータスごと）を表で書く。パスと関数名は `openapi.json` と `src/api/openapi/generated/` を確認する。まだ無いAPIは「未生成」と書き、前提条件にも書く。
+- 各ファイルの仕様：ファイルごとに `<details>` で折りたたみ、簡単な仕様を箇条書きで書く。
+  - `<summary>` の中は、バッククォートではなく `<code>` を使う。
+- 画面の細かいデザイン・エラー表示の置き場所は、子Issueに書く。
+- 要確認：決まっていないこと、規約やサンプルと食い違うことを書く。
+
+## 規約との対応
+- `generated` のAPI通信関数は `_services` からのみ呼ぶ。型は `_types`（または `src/types/`）で受けて再公開する。
+- `generated` から import するときは、必ず `index.ts` 経由にする。
+- `_services` のファイル名は、規約では `○○Server.ts` / `○○Client.ts`。Server Action の場合など、サンプルと異なるときは「要確認」に書く。
+- zod によるクライアント側検証は、使う場合のみ `_schemas` に書く。
+
+## 運用ルール
+- 子Issueを追加したら、親Issueの「子Issue」に `- [ ] #{子Issue番号}` を追記する。
+- 子Issueの作業が完了したら、親Issueのチェックを入れ、ファイルの配置場所を追記する。
+````
+
+</details>
+
+---
+
+## 子Issue（front・画面） {#child-front}
+
+画面の親Issue（front・画面）にぶら下げる、画面の実装などの子Issueです。Issue名の例：ログイン画面の実装。
+
+- 構成は「親Issue → 概要 → 詳細 → ファイルと import・API → 画面の構成 → エラーメッセージの出し方 → 手順 → 完了条件 → その他」です。
+- ファイルごとの仕様は親Issueに書き、子Issueでは「ファイルと import・API」を `<details>` で書きます。
+- 画面の構成（部品・配置・色）は、デザインから書きます。大きさ（幅・高さ・文字サイズ）の数値は書きません（共通部品の既定とTailwindで調整します）。
+- 実例：mbm-web-app の #130（ログイン画面の実装）
+
+### 表示イメージ
+
+<div markdown="1" style="border:1px solid #d0d7de;border-radius:6px;padding:4px 20px;background:#f6f8fa;overflow-x:auto;">
+
+## 親Issue
+
+#
+
+## 概要
+
+## 詳細
+
+## ファイルと import・API
+
+▶ `page.tsx`（クリックで開く）
+
+## 画面の構成
+
+（レイアウト図と、要素の表）
+
+### エラーメッセージの出し方
+
+## 手順
+
+### 1.
+
+## 完了条件
+
+- [ ]
+
+## その他
+
+### ブランチ名
+
+`feature/{子Issue番号}_{画面名}_{ユーザー名}`
+
+</div>
+
+### コピー用Markdown
+
+````markdown
+## 親Issue
+#
+
+## 概要
+（この画面を実装する。1行）
+
+## 詳細
+親Issueの「ディレクトリ構造」「ファイル一覧と役割」「各ファイルの仕様」に従い、`src/app/{画面名}/` を作成する。
+- 画面：`page.tsx`、`_components/...`
+- ロジック：`_lib/_hooks/...`
+- API 呼び出し：`_lib/_services/...`
+- 定数・型：`_lib/_constants/...`、`_types/index.ts`
+- 共通部品（`Input`、`Button` など）を使う
+
+着手前に、親Issueの前提条件を確認する。
+
+## ファイルと import・API
+
+`@/` は `src/` を指す。ファイルはすべて `src/app/{画面名}/` 配下に作る（以下は `src/app/{画面名}/` からの相対パス）。
+
+<details>
+<summary><code>page.tsx</code></summary>
+
+- import
+  - `import { XxxForm } from "./_components/XxxForm";`
+</details>
+
+<details>
+<summary><code>_lib/_services/xxx.ts</code></summary>
+
+- API：GET `/api/...`
+- import
+  - `import { xxx } from "@/api/openapi/generated";`
+  - `import { handleApiError } from "@/lib/services/handleApiError";`
+</details>
+
+## 画面の構成
+デザイン：`{デザインファイルのパス}`（背景色など）。大きさは共通部品の既定に任せ、デザインに合わせて Tailwind で調整する。
+
+```
+（レイアウト図）
+```
+
+| 要素 | 置く場所 | 使う部品 | デザインの仕様（文言・色・配置） | フォーム値 |
+| --- | --- | --- | --- | --- |
+
+### エラーメッセージの出し方
+デザインにエラー表示がない場合は、次のとおりにする。
+
+| 起きること | どこに出すか | 内容 | 処理 |
+| --- | --- | --- | --- |
+| 400 `VALIDATION_ERROR`（項目ごとの入力エラー） | 該当する入力欄の直下 | API が返す項目別のメッセージ | `applyFieldErrors` で各項目にセットして表示する |
+| 401 | | | |
+| 403・5xx・通信失敗 | エラー画面（`ROUTES.ERROR`） | | `handleApiError` が遷移する |
+
+## 手順
+
+### 1. 型・定数の作成
+
+### 2. API 呼び出しの作成
+
+### 3. フォームのロジックの作成
+
+### 4. 画面の作成
+
+### 5. 動作確認
+
+## 完了条件
+- [ ] 画面が表示され、操作できる
+- [ ] エラーが決めた場所に表示される
+- [ ] ESLint が通る
+- [ ] 親Issueにファイルの配置場所を追記した
+
+## その他
+### ブランチ名
+`feature/{子Issue番号}_{画面名}_{ユーザー名}`
+````
+
+<details markdown="1">
+<summary>AI向け補足（front子Issue）</summary>
+
+front親Issueの「AI向け補足」とあわせて、下記を渡す。
+
+````markdown
+# front子Issue（画面）作成ルール（AI向け）
+
+## 開発規約
+- フロント: https://mbm-projects.github.io/document/front-document
+- バック: https://mbm-projects.github.io/document/back-document
+
+## 出力ルール
+- Issue名も出す（例：ログイン画面の実装）。templateのfront matterは出力しない。
+- ラベルは、機能開発なら「機能開発」を付ける。「親Issue」は付けない。
+
+## 構成
+- 見出しは「親Issue → 概要 → 詳細 → ファイルと import・API → 画面の構成 → エラーメッセージの出し方 → 手順 → 完了条件 → その他」の順にする。不要な項目は省略してよい。
+- 親Issue：`#{親Issue番号}` と書く。
+- 概要：何を実装するかを1行で書く。
+- 詳細：作るファイルを、画面・ロジック・API 呼び出し・定数と型に分けて並べる。仕様は親Issueの「各ファイルの仕様」を参照させ、重複して書かない。着手前に確認する親Issueの前提条件も書く。
+- ファイルと import・API：ファイルごとに `<details>` で折りたたみ、使うAPI（メソッドとパス）と import 文を、パスつきで書く。
+  - `@/` は `src/` を指す。import は `generated` の `index.ts` 経由にする。API 通信関数は `_services` からのみ呼ぶ。
+  - 確定していない名前（関数名、配置先）は「仮」と書く。
+  - `<summary>` の中は、バッククォートではなく `<code>` を使う。
+- 画面の構成：デザイン（Figma・SVG など）を読み取り、レイアウト図と要素の表（置く場所、使う部品、文言・色・配置、フォーム値）を書く。
+  - 大きさ（幅・高さ・文字サイズ・座標）の数値は書かない。共通部品の既定に任せ、Tailwind で調整する。
+  - 共通部品が持たない見た目（variant など）は、親Issueの「要確認」に書く。
+  - 部品は、実際に存在するもの（`src/components/ui/common/`）と、その Props を確認して選ぶ。用途の違う部品は使わない（例：`HelpText` は補足文用で、エラー表示には使えない）。
+- エラーメッセージの出し方：400（項目ごと）、401、403、5xx・通信失敗ごとに、「どこに出すか」「内容」「処理」を表で書く。
+  - `handleApiError` の挙動（401 は `ROUTES.LOGIN` へ遷移、403・その他は `ROUTES.ERROR` へ遷移、400 `VALIDATION_ERROR` は `fieldErrors` を返す）を確認し、画面に残したいメッセージと食い違う場合は「要確認」に書く。
+- 手順：「型・定数 → API 呼び出し → フォームのロジック → 画面 → 動作確認」の順に、依存の下から上へ書く。サンプルをコピーする手順にはしない。
+- 完了条件：画面の動作、エラー表示、ESLint、親Issueへの追記を、チェックボックス `- [ ]` で書く。
+- その他：ブランチ名を書く。形式は `feature/{子Issue番号}_{画面名}_{ユーザー名}` とする。
+
+## 運用ルール
+- 子Issueの作業が完了したら、親Issueのチェックを入れ、ファイルの配置場所を親Issueに追記する。
+- 画面デザインの確認事項は、親Issueの「要確認」に書く。
+````
+
+</details>
+
+---
 
 ## API・CRUD 作成手順(今回はタスクの仕様書を作成するIssue) {#child-creation-steps}
 ### 1. タスク一覧に親Issueのタイトルを記述し、Issueを作成する
